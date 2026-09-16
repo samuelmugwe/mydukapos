@@ -1619,6 +1619,14 @@
             background: #fff; font-weight: 600; font-size: 14px; cursor: pointer;
         }
         .site-switch-btn.active { border-color: var(--primary); background: var(--primary); color: #fff; }
+        .site-switch-select {
+            flex: 1; padding: 10px 12px; border: 2px solid var(--primary); border-radius: 8px;
+            background: #fff; font-weight: 600; font-size: 14px; cursor: pointer; color: var(--primary);
+        }
+        .site-switch-label {
+            padding: 10px 12px; border: 2px solid var(--light); border-radius: 8px;
+            background: var(--light); font-weight: 600; font-size: 14px; color: var(--dark);
+        }
         .low-stock-banner {
             background: #fdecea; border: 1px solid var(--danger); border-radius: 8px;
             padding: 10px 14px; margin-bottom: 14px; font-size: 13px; color: #7a2e27;
@@ -2631,7 +2639,7 @@
             <h3>📜 Return History</h3>
             <div class="table-scroll">
             <table id="returns-history-table">
-                <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Reason</th><th>Condition</th><th>Restocked</th><th>Balance</th><th>Ref</th><th></th></tr></thead>
+                <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Reason</th><th>Condition</th><th>Restocked</th><th>Balance</th><th>Ref</th><th>Site</th><th>Served By</th><th></th></tr></thead>
                 <tbody></tbody>
             </table>
             </div>
@@ -3048,7 +3056,7 @@
                     <h3>📜 Restock History</h3>
                     <div class="table-scroll">
                         <table id="restock-history-table">
-                            <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty Added</th><th>Supplier</th><th>Notes</th></tr></thead>
+                            <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty Added</th><th>Supplier</th><th>Notes</th><th>Site</th><th>Restocked By</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -3100,7 +3108,7 @@
                     <h3>📜 Production History</h3>
                     <div class="table-scroll">
                         <table id="production-history-table">
-                            <thead><tr><th>Date</th><th>Item Produced</th><th>Qty</th><th>Sourcing</th><th>Stages</th></tr></thead>
+                            <thead><tr><th>Date</th><th>Item Produced</th><th>Qty</th><th>Sourcing</th><th>Stages</th><th>Site</th><th>Produced By</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -6379,6 +6387,12 @@
             // renderSiteSwitcher, which only renders the button for Admin).
             if (siteId !== 'both' && !sites.some(s => s.id === siteId)) return;
             if (siteId === 'both' && !isAdminServing()) return;
+            // Same restriction for a real site: only Admin may switch at
+            // all — a staff member stays locked to their assigned site
+            // (renderSiteSwitcher hides the control from them for this
+            // exact reason; this is the defense-in-depth backstop in case
+            // anything else ever calls this directly).
+            if (!isAdminServing() && siteId !== activeSiteId) return;
             commitQtyView(activeSiteId);
             activeSiteId = siteId;
             try {
@@ -6406,14 +6420,27 @@
             }
             const wrap = document.getElementById('site-switcher');
             if (!wrap) return;
-            wrap.innerHTML = sites.map(s => `
-                <button type="button" class="site-switch-btn ${s.id === activeSiteId ? 'active' : ''}" onclick="setActiveSite('${escapeQuotes(s.id)}')">
-                    ${s.type === 'production' ? '🏭' : '🏪'} ${escapeHtml(s.name)}
-                </button>`).join('') +
-                (isAdminServing() ? `<button type="button" class="site-switch-btn" onclick="setActiveSite('both')" style="${activeSiteId === 'both' ? '' : 'opacity:0.85;'}" title="View every site's data together, read and edit">
-                    👁️ ${activeSiteId === 'both' ? 'All Sites' : 'All'}
-                </button>` : '') +
-                `<button type="button" class="site-switch-btn" style="flex:0 0 auto; padding:10px 14px;" onclick="addShopBranch()" title="Add another Shop branch">+ Branch</button>`;
+
+            // Only Admin gets to move between sites — a staff member is
+            // locked to whatever site they're assigned to (reassignStaffSite
+            // in Settings is the only way that changes), matching the
+            // original "Staff access is locked to their assigned scope"
+            // requirement. Anyone else just sees a plain, non-interactive
+            // label naming the site they're on.
+            if (!isAdminServing()) {
+                const site = currentSite();
+                wrap.innerHTML = `<div class="site-switch-label">${site.type === 'production' ? '🏭' : '🏪'} ${escapeHtml(site.name)}</div>`;
+                renderLowStockDispatchBanner();
+                renderRawMaterialsLiveStrip();
+                return;
+            }
+
+            wrap.innerHTML = `
+                <select class="site-switch-select" onchange="setActiveSite(this.value)">
+                    ${sites.map(s => `<option value="${escapeQuotes(s.id)}" ${s.id === activeSiteId ? 'selected' : ''}>${s.type === 'production' ? '🏭' : '🏪'} ${escapeHtml(s.name)}</option>`).join('')}
+                    <option value="both" ${activeSiteId === 'both' ? 'selected' : ''}>👁️ All Sites</option>
+                </select>
+                <button type="button" class="site-switch-btn" style="flex:0 0 auto; padding:10px 14px;" onclick="addShopBranch()" title="Add another Shop branch">+ Branch</button>`;
             renderLowStockDispatchBanner();
             renderRawMaterialsLiveStrip();
         }
@@ -8292,6 +8319,7 @@
             const noteParts = [customerName, customerPhone, logoSpecs, orderNotes].filter(Boolean);
             productionLog.push({
                 id: genSaleId(), timestamp: new Date().toISOString(),
+                siteId: activeSiteId, producedBy: (currentServer && currentServer.name) || 'Admin',
                 targetKind: 'product', targetId: product.code, targetName: product.name, qty,
                 sourceMode: useRecipe ? 'recipe' : (brandedBaleSourceMode === 'existing' ? 'deduct' : 'new-batch'),
                 componentsUsed, bottlesPerBale, stages: null,
@@ -10023,6 +10051,8 @@
             headerLines.push('-'.repeat(32));
             headerLines.push(`Date: ${new Date(sale.timestamp).toLocaleDateString('en-GB')}   Time: ${new Date(sale.timestamp).toLocaleTimeString('en-GB')}`);
             headerLines.push(`Served by: ${sale.servedBy || 'Admin'}`);
+            const saleSite = sites.find(s => s.id === sale.siteId);
+            if (saleSite) headerLines.push(`Site: ${saleSite.name}`);
 
             // Contact details print right below the shop name/logo, at the
             // very top — same position as a real till receipt's own header.
@@ -11776,6 +11806,7 @@
             const notes = document.getElementById('wizard-notes-input').value.trim();
             productionLog.push({
                 id: genSaleId(), timestamp: new Date().toISOString(),
+                siteId: activeSiteId, producedBy: (currentServer && currentServer.name) || 'Admin',
                 targetKind: 'product', targetId: target.code, targetName: target.name, qty: bottles,
                 workflow: 'wizard', steps: wizardStepsDraft.map(s => ({ name: s.name, materials: s.materials })),
                 materialsUsed, landedIn: 'factory', notes,
@@ -18153,7 +18184,7 @@
                     const cost = parseFloat(document.getElementById('restock-new-material-cost-input').value) || 0;
                     const material = { id: `mat-${genSaleId()}`, siteId: activeSiteId, name, unitCost: cost, stockQty: qty, supplierId: supplierId || null, isProductionComponent: false, componentRole: '' };
                     rawMaterials.push(material);
-                    restockLog.push({ id: genSaleId(), timestamp: new Date().toISOString(), classification: 'material', targetId: material.id, targetName: name, qtyAdded: qty, createdNew: true, notes, supplierId, supplierName });
+                    restockLog.push({ id: genSaleId(), timestamp: new Date().toISOString(), classification: 'material', targetId: material.id, targetName: name, qtyAdded: qty, createdNew: true, notes, supplierId, supplierName, siteId: activeSiteId, restockedBy: (currentServer && currentServer.name) || 'Admin' });
                     renderRawMaterialsTable();
                 } else {
                     const category = document.getElementById('restock-new-item-category-select').value;
@@ -18162,7 +18193,7 @@
                     const wholesaleSellingPrice = parseFloat(document.getElementById('restock-new-item-wholesale-input').value) || 0;
                     const code = `ITM-${genSaleId()}`;
                     products.push({ code, name, siteId: activeSiteId, category, price, wholesalePrice: costPrice, wholesaleSellingPrice, qty, vatCategory: 'A', supplierId: supplierId || null });
-                    restockLog.push({ id: genSaleId(), timestamp: new Date().toISOString(), classification: 'item', targetId: code, targetName: name, qtyAdded: qty, createdNew: true, notes, supplierId, supplierName });
+                    restockLog.push({ id: genSaleId(), timestamp: new Date().toISOString(), classification: 'item', targetId: code, targetName: name, qtyAdded: qty, createdNew: true, notes, supplierId, supplierName, siteId: activeSiteId, restockedBy: (currentServer && currentServer.name) || 'Admin' });
                     renderProductsTable();
                     renderAllItemsGrid();
                 }
@@ -18186,7 +18217,7 @@
                     // cost used from this restock on.
                     const newCost = parseFloat(document.getElementById('restock-existing-material-cost-input').value);
                     if (!isNaN(newCost) && newCost >= 0) material.unitCost = newCost;
-                    restockLog.push({ id: genSaleId(), timestamp: new Date().toISOString(), classification: 'material', targetId, targetName: material.name, qtyAdded: qty, createdNew: false, notes, supplierId, supplierName });
+                    restockLog.push({ id: genSaleId(), timestamp: new Date().toISOString(), classification: 'material', targetId, targetName: material.name, qtyAdded: qty, createdNew: false, notes, supplierId, supplierName, siteId: activeSiteId, restockedBy: (currentServer && currentServer.name) || 'Admin' });
                     renderRawMaterialsTable();
                 } else {
                     const product = products.find(p => p.code === targetId);
@@ -18222,7 +18253,7 @@
                         syncBaleBaseTierPrice(product, newRetail);
                     }
                     logStockMovement(product.code, product.name, qty, notes ? `Restock — ${notes}` : 'Restock');
-                    restockLog.push({ id: genSaleId(), timestamp: new Date().toISOString(), classification: 'item', targetId, targetName: product.name, qtyAdded: qty, createdNew: false, notes, supplierId, supplierName });
+                    restockLog.push({ id: genSaleId(), timestamp: new Date().toISOString(), classification: 'item', targetId, targetName: product.name, qtyAdded: qty, createdNew: false, notes, supplierId, supplierName, siteId: activeSiteId, restockedBy: (currentServer && currentServer.name) || 'Admin' });
                     renderProductsTable();
                     renderAllItemsGrid();
                 }
@@ -18247,8 +18278,10 @@
             if (!tbody) return;
             const rows = [...restockLog].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 200);
             tbody.innerHTML = rows.length === 0
-                ? `<tr><td colspan="6" class="empty-state">No restocks recorded yet.</td></tr>`
-                : rows.map(r => `
+                ? `<tr><td colspan="8" class="empty-state">No restocks recorded yet.</td></tr>`
+                : rows.map(r => {
+                    const site = sites.find(s => s.id === r.siteId);
+                    return `
                     <tr>
                         <td>${new Date(r.timestamp).toLocaleDateString('en-GB')}</td>
                         <td>${r.classification === 'material' ? '🧪 Material' : '📦 Item'}${r.createdNew ? ' (new)' : ''}</td>
@@ -18256,7 +18289,10 @@
                         <td>${r.qtyAdded}</td>
                         <td>${escapeHtml(r.supplierName || '—')}</td>
                         <td>${escapeHtml(r.notes || '')}</td>
-                    </tr>`).join('');
+                        <td>${site ? escapeHtml(site.name) : '—'}</td>
+                        <td>${escapeHtml(r.restockedBy || '—')}</td>
+                    </tr>`;
+                }).join('');
         }
 
         /* ---------- PRODUCTION TAB — RECIPE-BASED ----------
@@ -18368,6 +18404,7 @@
             const notes = document.getElementById('production-notes-input').value.trim();
             productionLog.push({
                 id: genSaleId(), timestamp: new Date().toISOString(),
+                siteId: activeSiteId, producedBy: (currentServer && currentServer.name) || 'Admin',
                 targetKind: kind, targetId: id, targetName: target.name, qty,
                 sourceMode: componentsUsed.length > 0 ? 'recipe' : 'no-recipe',
                 componentsUsed, bottlesPerBale: null, stages: null, notes,
@@ -18389,7 +18426,7 @@
             if (!tbody) return;
             const rows = [...productionLog].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 200);
             tbody.innerHTML = rows.length === 0
-                ? `<tr><td colspan="5" class="empty-state">No production runs recorded yet.</td></tr>`
+                ? `<tr><td colspan="7" class="empty-state">No production runs recorded yet.</td></tr>`
                 : rows.map(r => {
                     const stagesLabel = r.stages ? Object.entries(r.stages).filter(([, v]) => v).map(([k]) => k).join(', ') : '';
                     const sourcingLabel = r.workflow === 'wizard' ? '🧙 Wizard → Factory'
@@ -18397,6 +18434,7 @@
                         : r.sourceMode === 'recipe' ? '📋 Recipe'
                         : r.sourceMode === 'deduct' ? '📉 Deducted' : '🆕 New batch';
                     const stagesOrSteps = r.workflow === 'wizard' ? (r.steps || []).map(s => s.name).join(', ') : stagesLabel;
+                    const site = sites.find(s => s.id === r.siteId);
                     return `
                     <tr>
                         <td>${new Date(r.timestamp).toLocaleDateString('en-GB')}</td>
@@ -18404,6 +18442,8 @@
                         <td>${r.qty}</td>
                         <td>${sourcingLabel}</td>
                         <td style="font-size:12px;">${escapeHtml(stagesOrSteps)}</td>
+                        <td>${site ? escapeHtml(site.name) : '—'}</td>
+                        <td>${escapeHtml(r.producedBy || '—')}</td>
                     </tr>`;
                 }).join('');
         }
@@ -20520,6 +20560,7 @@
 
             const record = {
                 id: genSaleId(), timestamp: new Date().toISOString(), type: 'return',
+                siteId: activeSiteId,
                 itemCode: selectedReturnItem.code, itemName: selectedReturnItem.name, qty,
                 reason, condition, restocked: willRestock,
                 refNumber: selectedReturnItem.sourceRefNumber,
@@ -20558,7 +20599,7 @@
             const tbody = document.querySelector('#returns-history-table tbody');
             if (!tbody) return;
             if (returns.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No returns recorded yet.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="12" class="empty-state">No returns recorded yet.</td></tr>`;
                 return;
             }
             const sorted = [...returns].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -20575,6 +20616,7 @@
                 } else if (r.topUpAmount > 0) {
                     balanceCell = money(r.topUpAmount);
                 }
+                const returnSite = sites.find(s => s.id === r.siteId);
                 return `
                 <tr>
                     <td>${new Date(r.timestamp).toLocaleDateString('en-GB')}</td>
@@ -20586,6 +20628,8 @@
                     <td>${r.restocked ? '✅ Yes' : '❌ No'}</td>
                     <td>${balanceCell}</td>
                     <td>${r.refNumber ? escapeHtml(r.refNumber) : '—'}</td>
+                    <td>${returnSite ? escapeHtml(returnSite.name) : '—'}</td>
+                    <td>${escapeHtml(r.servedBy || '—')}</td>
                     <td>${isExchange ? `<button class="settings-small-btn" onclick="reprintExchangeReceipt('${escapeQuotes(r.id)}')">🖶️</button>` : ''}</td>
                 </tr>`;
             }).join('');
@@ -20919,6 +20963,7 @@
 
             const record = {
                 id: genSaleId(), timestamp: new Date().toISOString(), type: 'exchange',
+                siteId: activeSiteId,
                 itemCode: selectedReturnItem.code, itemName: selectedReturnItem.name, qty,
                 reason, condition, restocked: willRestock,
                 refNumber: selectedReturnItem.sourceRefNumber,
@@ -21043,6 +21088,7 @@
 
             const record = {
                 id: genSaleId(), timestamp: new Date().toISOString(), type: 'exchange_pending',
+                siteId: activeSiteId,
                 itemCode: selectedReturnItem.code, itemName: selectedReturnItem.name, qty,
                 reason, condition, restocked: willRestock,
                 refNumber: selectedReturnItem.sourceRefNumber,
@@ -21279,6 +21325,8 @@
             headerLines.push('-'.repeat(32));
             headerLines.push(`Date: ${dateStr}   Time: ${timeStr}`);
             if (record.servedBy) headerLines.push(`Served by: ${record.servedBy}`);
+            const recordSite = sites.find(s => s.id === record.siteId);
+            if (recordSite) headerLines.push(`Site: ${recordSite.name}`);
             if (sale && sale.refNumber) headerLines.push(`Ref: ${sale.refNumber}`);
 
             let lines = [];
