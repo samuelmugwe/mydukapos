@@ -1540,6 +1540,82 @@
             background: rgba(44, 62, 80, 0.95);
             display: none; justify-content: center; align-items: center; z-index: 9999;
         }
+        /* These two were missing their default-hidden rule entirely — every
+           other modal in this file has one, these somehow didn't, so they
+           rendered visible on every page load instead of only when opened. */
+        #site-dispatch-modal, #product-edit-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.95);
+            display: none; justify-content: center; align-items: center; z-index: 9999; overflow-y: auto; padding: 20px 0;
+        }
+
+        /* Notification bell — same visual pattern used across the other
+           modules in this suite. The low-stock-dispatch alert used to sit
+           as an always-visible banner on the Sales Counter; it now lives
+           here instead, so it's out of the way until checked. */
+        .notif-wrapper { position: relative; }
+        .notif-btn {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            font-size: 18px;
+            padding: 8px 12px;
+            position: relative;
+        }
+        .notif-btn:hover { background: rgba(255,255,255,0.22); }
+        .notif-badge {
+            position: absolute;
+            top: -6px; right: -6px;
+            background: var(--danger);
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 3px;
+            border: 2px solid var(--primary);
+        }
+        .notif-dropdown {
+            display: none;
+            position: absolute;
+            top: 46px;
+            right: 0;
+            width: 320px;
+            max-height: 340px;
+            overflow-y: auto;
+            background: var(--bg-surface);
+            color: var(--dark);
+            border-radius: 6px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            z-index: 500;
+        }
+        .notif-dropdown.show { display: block; }
+        .notif-dropdown-header {
+            padding: 12px 15px;
+            font-weight: bold;
+            background: var(--light);
+            border-radius: 6px 6px 0 0;
+        }
+        .notif-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-item .notif-qty {
+            background: var(--danger);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
 
         /* ---------- Sales Report Modal ---------- */
         #sales-report-modal {
@@ -2037,6 +2113,17 @@
                                 <p id="changepin-msg" class="settings-msg" style="margin:0 0 6px;"></p>
                                 <button class="settings-small-btn" style="width:100%; background:var(--success); color:white;" onclick="submitChangeOwnPin()">Save New PIN</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="notif-wrapper">
+                    <button class="notif-btn" onclick="toggleNotifications(event)" title="Low stock &amp; dispatch alerts">
+                        🔔<span id="notif-badge" class="notif-badge" style="display: none;">0</span>
+                    </button>
+                    <div id="notif-dropdown" class="notif-dropdown">
+                        <div class="notif-dropdown-header">🚚 Low Stock — Dispatch from Production</div>
+                        <div id="notif-list">
+                            <div class="notif-item empty-state" style="justify-content:center;">Nothing running low.</div>
                         </div>
                     </div>
                 </div>
@@ -6329,21 +6416,42 @@
         }
 
         function renderLowStockDispatchBanner() {
-            const el = document.getElementById('low-stock-dispatch-banner');
-            if (!el) return;
-            if (!canSeeLowStockAlerts()) { el.style.display = 'none'; return; }
+            // Moved off the Sales Counter and into the 🔔 bell (see
+            // toggleNotifications) — this keeps the old banner element
+            // permanently hidden and updates the bell's badge/list instead.
+            const oldBanner = document.getElementById('low-stock-dispatch-banner');
+            if (oldBanner) oldBanner.style.display = 'none';
+
+            const badge = document.getElementById('notif-badge');
+            const list = document.getElementById('notif-list');
+            if (!badge || !list) return;
+            if (!canSeeLowStockAlerts()) { badge.style.display = 'none'; list.innerHTML = '<div class="notif-item empty-state" style="justify-content:center;">Nothing running low.</div>'; return; }
             const items = lowStockDispatchItems();
-            if (items.length === 0) { el.style.display = 'none'; return; }
-            const lines = items.slice(0, 6).map(({ product, branch }) =>
-                `<li>${escapeHtml(product.name)} — ${stockAt(product, branch.id)} left at ${escapeHtml(branch.name)}</li>`);
-            const more = items.length > 6 ? `<li>…and ${items.length - 6} more</li>` : '';
-            el.innerHTML = `
-                <div class="low-stock-banner">
-                    <strong>⚠️ ${items.length} item${items.length === 1 ? '' : 's'} running low — dispatch from Production:</strong>
-                    <ul>${lines.join('')}${more}</ul>
-                </div>`;
-            el.style.display = 'block';
+            if (items.length === 0) {
+                badge.style.display = 'none';
+                list.innerHTML = '<div class="notif-item empty-state" style="justify-content:center;">Nothing running low.</div>';
+                return;
+            }
+            badge.style.display = 'flex';
+            badge.textContent = items.length > 99 ? '99+' : String(items.length);
+            list.innerHTML = items.map(({ product, branch }) => `
+                <div class="notif-item">
+                    <span>${escapeHtml(product.name)} <span style="color:#7f8c8d; font-size:12px;">at ${escapeHtml(branch.name)}</span></span>
+                    <span class="notif-qty">${stockAt(product, branch.id)} left</span>
+                </div>`).join('');
         }
+
+        function toggleNotifications(evt) {
+            if (evt) evt.stopPropagation();
+            const dropdown = document.getElementById('notif-dropdown');
+            if (!dropdown) return;
+            dropdown.classList.toggle('show');
+        }
+        document.addEventListener('click', (e) => {
+            const wrapper = document.querySelector('.notif-wrapper');
+            const dropdown = document.getElementById('notif-dropdown');
+            if (wrapper && dropdown && !wrapper.contains(e.target)) dropdown.classList.remove('show');
+        });
 
         // Always-visible raw-material stock — not tucked inside a modal —
         // so Production can see at a glance how many bottles/caps/seals/
@@ -8986,12 +9094,12 @@
                         <td>${escapeHtml(l.name)}${badgeHtml}${chargeableBadgeHtml}${bomSellingBadgeHtml}</td>
                         <td>
                             <div class="qty-controls">
-                                <button onclick="changeCartQty('${escapeQuotes(l.key)}', -1)">−</button>
+                                <button onmousedown="event.preventDefault()" onclick="changeCartQty('${escapeQuotes(l.key)}', -1)">−</button>
                                 <input type="number" class="cart-qty-input" step="any" min="0" inputmode="decimal"
                                     style="width:58px; text-align:center; padding:3px 2px; border:1px solid var(--light); border-radius:4px;"
                                     value="${l.qty}" onblur="setCartQtyDirect('${escapeQuotes(l.key)}', this.value)"
                                     onkeydown="if (event.key === 'Enter') this.blur();">
-                                <button onclick="changeCartQty('${escapeQuotes(l.key)}', 1)">+</button>
+                                <button onmousedown="event.preventDefault()" onclick="changeCartQty('${escapeQuotes(l.key)}', 1)">+</button>
                             </div>
                         </td>
                         <td>${renderCartPriceCell(l)}</td>
