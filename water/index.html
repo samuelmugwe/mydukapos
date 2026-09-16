@@ -1084,72 +1084,7 @@
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
         .toast.error { background: var(--danger); }
 
-        /* Notification Bell */
         .header-actions { display: flex; align-items: center; gap: 15px; }
-        .notif-wrapper { position: relative; }
-        .notif-btn {
-            background: rgba(255,255,255,0.12);
-            color: white;
-            font-size: 18px;
-            padding: 8px 12px;
-            position: relative;
-        }
-        .notif-btn:hover { background: rgba(255,255,255,0.22); }
-        .notif-badge {
-            position: absolute;
-            top: -6px; right: -6px;
-            background: var(--danger);
-            color: white;
-            font-size: 11px;
-            font-weight: bold;
-            border-radius: 50%;
-            min-width: 18px;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 3px;
-            border: 2px solid var(--primary);
-        }
-        .notif-dropdown {
-            display: none;
-            position: absolute;
-            top: 46px;
-            right: 0;
-            width: 320px;
-            max-height: 340px;
-            overflow-y: auto;
-            background: var(--bg-surface);
-            color: var(--dark);
-            border-radius: 6px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-            z-index: 500;
-        }
-        .notif-dropdown.show { display: block; }
-        .notif-dropdown-header {
-            padding: 12px 15px;
-            font-weight: bold;
-            background: var(--light);
-            border-radius: 6px 6px 0 0;
-        }
-        .notif-item {
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--light);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-        }
-        .notif-item:last-child { border-bottom: none; }
-        .notif-item .notif-qty {
-            background: var(--danger);
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-        .notif-empty { padding: 20px 15px; text-align: center; color: #95a5a6; font-size: 14px; }
 
         /* Inventory list table */
         .inv-thumb { width: 42px; height: 42px; object-fit: cover; border-radius: 4px; border: 1px solid var(--light); }
@@ -1510,6 +1445,11 @@
             background: rgba(44, 62, 80, 0.95);
             display: none; justify-content: center; align-items: center; z-index: 9999;
         }
+        #price-select-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.95);
+            display: none; justify-content: center; align-items: center; z-index: 9999;
+        }
         #branded-bale-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(44, 62, 80, 0.95);
@@ -1616,6 +1556,22 @@
             padding: 2px 8px;
             border-radius: 10px;
         }
+        /* Corner price-tag on a grid card — click it to pick Retail /
+           Wholesale / Custom before adding to cart, same idea as tapping
+           the card body itself (which still adds at Retail instantly). */
+        .size-card { position: relative; }
+        .price-tag-corner {
+            position: absolute;
+            top: 6px; right: 6px;
+            background: rgba(0,0,0,0.55);
+            color: white;
+            border-radius: 4px;
+            padding: 3px 6px;
+            font-size: 13px;
+            line-height: 1;
+            z-index: 2;
+        }
+        .price-tag-corner:hover { background: rgba(0,0,0,0.75); }
 
         /* ---------- Sales Report Modal ---------- */
         #sales-report-modal {
@@ -5236,6 +5192,36 @@
         </div>
     </div>
 
+    <!-- PRICE-SELECT MODAL: the grid card's 🏷️ corner opens this so you
+         can pick Retail/Wholesale/Custom BEFORE adding to cart — it just
+         adds at Retail first (identical to a body-click) then overrides
+         the price via the exact same performCartPriceChange() the cart's
+         own price dropdown already uses, so a price picked here behaves
+         identically to one changed there afterward. -->
+    <div id="price-select-modal">
+        <div class="popup-modal-box" style="max-width:340px;">
+            <h2>🏷️ Choose a Price</h2>
+            <div id="price-select-item-name" style="font-weight:bold; font-size:15px; margin-bottom:14px;"></div>
+            <button type="button" class="btn-main" id="price-select-retail-btn" style="width:100%; margin-bottom:8px;" onclick="choosePriceSelectOption('retail')"></button>
+            <div id="price-select-wholesale-row">
+                <button type="button" class="btn-main" id="price-select-wholesale-btn" style="width:100%; margin-bottom:8px; background:var(--secondary, #2980b9);" onclick="choosePriceSelectOption('wholesale')"></button>
+            </div>
+            <div class="form-group" style="margin-top:6px;">
+                <label class="label">Custom Amount (KES)</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="number" id="price-select-custom-input" min="0" step="0.01" placeholder="0.00"
+                        onkeydown="if (event.key === 'Enter') confirmPriceSelectCustom();">
+                    <button type="button" class="btn-main settings-small-btn" onclick="confirmPriceSelectCustom()">OK</button>
+                </div>
+            </div>
+            <p id="price-select-error" style="color:var(--danger); font-size:13px; min-height:16px;"></p>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+                <button class="btn-main" style="background:#95a5a6; width:100%;" onclick="closePriceSelectModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- CUSTOM BALE ORDER MODAL: a Custom/Executive bale keeps no
          preloaded stock of its own — clicking one always opens this to
          capture the client's branding details and fulfil the order right
@@ -7885,6 +7871,14 @@
             const halfBaleBtnHtml = (p.category === 'bale' && !p.customQuote && !isOnDemandBale && !out && p.allowHalfBale !== false)
                 ? `<button type="button" class="half-bale-btn" onclick="event.stopPropagation(); addBottledToCart('${escapeQuotes(p.code)}', null, 0.5)">½ Bale — ${money(getHalfBalePrice(p))}</button>`
                 : '';
+            // Corner price-tag: lets you pick Retail/Wholesale/Custom
+            // before adding, without disturbing the card-body click (which
+            // still adds at Retail instantly, unchanged). Not offered for
+            // Custom Quote or on-demand (Custom/Executive) bale items —
+            // those already have their own dedicated pricing flows.
+            const priceTagHtml = (!p.customQuote && !isOnDemandBale)
+                ? `<div class="price-tag-corner" onclick="event.stopPropagation(); openPriceSelectModal('${escapeQuotes(p.code)}')" title="Choose Retail, Wholesale, or a custom price">🏷️</div>`
+                : '';
             // Bottle-tracked bale items show the Full/Half/Loose breakdown
             // instead of a plain decimal bale count, matching the same
             // figures the Inventory tab's nested row shows for this item.
@@ -7895,6 +7889,7 @@
             return `
                 <div class="size-card ${out ? 'out-of-stock' : ''}" onclick="${clickHandler}">
                     ${photoHtml}
+                    ${priceTagHtml}
                     <div class="size-label">${escapeHtml(p.name)}</div>
                     <div class="size-price">${priceLabel}</div>
                     <div class="size-stock">${p.customQuote ? 'Call for pricing' : (out ? 'Out of stock' : stockLabel)}</div>
@@ -8583,6 +8578,61 @@
             if (!line) return;
             line.price = price;
             renderCart();
+        }
+
+        /* ---------- GRID-CARD PRICE PICKER (🏷️ corner badge) ----------
+           Opens BEFORE anything is in the cart, unlike the cart's own
+           price dropdown. Retail/Wholesale add straight at that price;
+           Custom adds at Retail first then overrides — see the modal's
+           own HTML comment for why that's safe. */
+        let priceSelectItemCode = null;
+
+        function openPriceSelectModal(code) {
+            const product = products.find(p => p.code === code);
+            if (!product) return;
+            priceSelectItemCode = code;
+            document.getElementById('price-select-error').textContent = '';
+            document.getElementById('price-select-item-name').textContent = product.name;
+            document.getElementById('price-select-retail-btn').textContent = `Retail — ${money(product.price)}`;
+            const hasWholesale = (product.wholesalePrice || 0) > 0;
+            document.getElementById('price-select-wholesale-row').style.display = hasWholesale ? '' : 'none';
+            if (hasWholesale) document.getElementById('price-select-wholesale-btn').textContent = `Wholesale — ${money(product.wholesalePrice)}`;
+            document.getElementById('price-select-custom-input').value = '';
+            document.getElementById('price-select-modal').style.display = 'flex';
+        }
+
+        function closePriceSelectModal() {
+            priceSelectItemCode = null;
+            document.getElementById('price-select-modal').style.display = 'none';
+        }
+
+        function choosePriceSelectOption(tier) {
+            const code = priceSelectItemCode;
+            const product = products.find(p => p.code === code);
+            if (!code || !product) return;
+            const key = `product:${code}`;
+            const beforeQty = currentCart[key] ? currentCart[key].qty : 0;
+            addBottledToCart(code);
+            const afterQty = currentCart[key] ? currentCart[key].qty : 0;
+            if (afterQty <= beforeQty) { closePriceSelectModal(); return; } // addBottledToCart declined (out of stock) — its own toast already explained why
+            if (tier === 'wholesale') performCartPriceChange(key, product.wholesalePrice || 0);
+            closePriceSelectModal();
+        }
+
+        function confirmPriceSelectCustom() {
+            const code = priceSelectItemCode;
+            const product = products.find(p => p.code === code);
+            const errEl = document.getElementById('price-select-error');
+            if (!code || !product) return;
+            const value = parseFloat(document.getElementById('price-select-custom-input').value);
+            if (isNaN(value) || value < 0) { errEl.textContent = 'Enter a valid price.'; return; }
+            const key = `product:${code}`;
+            const beforeQty = currentCart[key] ? currentCart[key].qty : 0;
+            addBottledToCart(code);
+            const afterQty = currentCart[key] ? currentCart[key].qty : 0;
+            if (afterQty <= beforeQty) { closePriceSelectModal(); return; }
+            performCartPriceChange(key, value);
+            closePriceSelectModal();
         }
 
         function renderCartPriceCell(line) {
@@ -21379,6 +21429,7 @@
                 'custom-size-modal': closeAddCustomRefillSize,
                 'admin-pw-modal': closeAdminPwModal,
                 'custom-quote-modal': closeCustomQuoteModal,
+                'price-select-modal': closePriceSelectModal,
                 'branded-bale-modal': closeBrandedBaleModal,
                 'grid-overflow-modal': closeGridOverflowModal,
                 'sales-report-modal': closeSalesReport,
