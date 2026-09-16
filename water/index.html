@@ -8343,6 +8343,7 @@
             };
             renderCart();
             if (typeof renderProductionHistoryTable === 'function') renderProductionHistoryTable();
+            if (typeof renderFactoryStockTable === 'function') renderFactoryStockTable();
             if (typeof renderProductsTable === 'function') renderProductsTable();
             renderAllItemsGrid();
             queuePush();
@@ -11578,8 +11579,13 @@
             return products.filter(p => (p.category === 'bale' || p.category === 'bottled') && !p.customQuote);
         }
 
+        // Prefers the live qty mirror when we're actually viewing
+        // Production (always correct instantly, no lag) and only falls
+        // back to the committed stock{} map for the admin "All Sites"
+        // view, where there's no single active site's mirror to trust.
         function factoryStockDisplay(p) {
-            return `${stockAt(p, productionSiteId())} ${p.category === 'bale' ? 'bale(s)' : 'unit(s)'}`;
+            const n = (activeSiteId === productionSiteId()) ? (p.qty || 0) : stockAt(p, productionSiteId());
+            return `${n} ${p.category === 'bale' ? 'bale(s)' : 'unit(s)'}`;
         }
 
         function renderFactoryStockTable() {
@@ -11591,7 +11597,7 @@
                 return;
             }
             tbody.innerHTML = list.map(p => {
-                const available = stockAt(p, productionSiteId());
+                const available = (activeSiteId === productionSiteId()) ? (p.qty || 0) : stockAt(p, productionSiteId());
                 return `
                 <tr>
                     <td>${escapeHtml(p.name)}</td>
@@ -18417,6 +18423,7 @@
             renderProductsTable();
             renderAllItemsGrid();
             renderProductionHistoryTable();
+            renderFactoryStockTable();
             queuePush();
             showToast(`Produced ${qty} × "${target.name}".`);
         }
