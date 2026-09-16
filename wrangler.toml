@@ -37,7 +37,7 @@ pages_build_output_dir = "."
 # variable name "mydukapos_kv", instead of editing this file.
 [[kv_namespaces]]
 binding = "mydukapos_kv"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "4c245fbb477449d88b2be62ade1c0f98"
 
 # Preview deployments (e.g. pull request previews) can use the same namespace,
 # or create a second one and set its id here to keep preview data separate.
