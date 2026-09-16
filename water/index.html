@@ -6082,21 +6082,24 @@
             productSyncSnapshot = {};
             (Array.isArray(products) ? products : []).forEach((p) => {
                 if (!p || p.code == null) return;
-                // `qty` is excluded from the dirty signature along with
-                // `updatedAt`: it's just this device's current-site mirror
-                // of `stock` (see the Shared Item Catalogue notes above),
-                // recomputed locally every time the active site changes or
-                // data is pulled. It's never authoritative, so it must never
-                // by itself mark a record dirty or drive a sync conflict —
-                // only real changes to `stock` (or anything else) should.
-                const { updatedAt, qty, ...rest } = p;
+                // `qty` (and, for trackBottles bales, `bottleStock` plus
+                // the display fields derived from it) are excluded from
+                // the dirty signature along with `updatedAt`: they're just
+                // this device's current-site mirror of `stock`/
+                // `bottleStockBySite` (see the Shared Item Catalogue notes
+                // above), recomputed locally every time the active site
+                // changes or data is pulled. Never authoritative, so they
+                // must never by themselves mark a record dirty or drive a
+                // sync conflict — only a real change to `stock`/
+                // `bottleStockBySite` (or anything else) should.
+                const { updatedAt, qty, bottleStock, fullBales, halfBales, looseBottles, ...rest } = p;
                 productSyncSnapshot[p.code] = JSON.stringify(rest);
             });
         }
         function stampDirtyProducts() {
             (Array.isArray(products) ? products : []).forEach((p) => {
                 if (!p || p.code == null) return;
-                const { updatedAt, qty, ...rest } = p;
+                const { updatedAt, qty, bottleStock, fullBales, halfBales, looseBottles, ...rest } = p;
                 const sig = JSON.stringify(rest);
                 if (productSyncSnapshot[p.code] !== sig) {
                     p.updatedAt = Date.now();
@@ -6281,6 +6284,24 @@
             if (!p || !p.stock) return 0;
             return Object.values(p.stock).reduce((s, v) => s + (typeof v === 'number' ? v : 0), 0);
         }
+        // Same per-site isolation as stockAt/setStockAt, but for a bottle-
+        // tracked bale's bottleStock — this field was missed in the
+        // original shared-catalogue migration (it lived outside stock{}
+        // entirely), so trackBottles bales were showing the same bottle
+        // count at every site instead of an isolated one per site.
+        function bottleStockAt(p, siteId) {
+            if (!p || !p.bottleStockBySite) return 0;
+            const v = p.bottleStockBySite[siteId];
+            return typeof v === 'number' ? v : 0;
+        }
+        function setBottleStockAt(p, siteId, value) {
+            if (!p) return;
+            if (!p.bottleStockBySite) p.bottleStockBySite = {};
+            p.bottleStockBySite[siteId] = Math.max(0, Math.round(value));
+        }
+        function addBottleStockAt(p, siteId, delta) {
+            setBottleStockAt(p, siteId, bottleStockAt(p, siteId) + delta);
+        }
         // One-time migration: legacy data had a separate product ROW per
         // site (a "500ml Bottle" added at Shop and another "500ml Bottle"
         // added at Production were two different records). We can't safely
@@ -6301,6 +6322,12 @@
                     p.stock[originSite] = p.qty || 0;
                     changed = true;
                 }
+                if (p.trackBottles && !p.bottleStockBySite) {
+                    p.bottleStockBySite = {};
+                    const originSite = p.siteId || shopSiteId();
+                    p.bottleStockBySite[originSite] = p.bottleStock || 0;
+                    changed = true;
+                }
             });
             return changed;
         }
@@ -6308,12 +6335,26 @@
             if (siteId === 'both') {
                 products.forEach(p => { p.qty = totalStockAcrossSites(p); });
             } else {
-                products.forEach(p => { p.qty = stockAt(p, siteId); });
+                products.forEach(p => {
+                    p.qty = stockAt(p, siteId);
+                    // trackBottles bales derive qty from bottleStock, not
+                    // from the plain decimal stock{} map — swap in this
+                    // site's real bottle count first, then let
+                    // syncBaleTrackingFields compute the correct qty/
+                    // fullBales/halfBales/looseBottles from it.
+                    if (p.trackBottles) {
+                        p.bottleStock = bottleStockAt(p, siteId);
+                        syncBaleTrackingFields(p);
+                    }
+                });
             }
         }
         function commitQtyView(siteId) {
             if (siteId === 'both' || !siteId) return; // combined view is derived, never a write target
-            products.forEach(p => { setStockAt(p, siteId, p.qty || 0); });
+            products.forEach(p => {
+                setStockAt(p, siteId, p.qty || 0);
+                if (p.trackBottles) setBottleStockAt(p, siteId, p.bottleStock || 0);
+            });
         }
         function currentSite() {
             if (activeSiteId === 'both') return { id: 'both', name: 'All Sites', type: 'both' };
@@ -11004,6 +11045,16 @@
         function removeProduct(code) {
             const product = products.find(p => p.code === code);
             if (!product) return;
+            // The catalogue is shared across every site — deleting this
+            // row removes it everywhere, not just here. If it still has
+            // stock parked at another site, block the delete rather than
+            // silently wiping that other site's stock out from under it.
+            const otherSitesWithStock = sites.filter(s => s.id !== activeSiteId && stockAt(product, s.id) > 0);
+            if (otherSitesWithStock.length > 0) {
+                const names = otherSitesWithStock.map(s => `${s.name} (${stockAt(product, s.id)})`).join(', ');
+                alert(`Can't remove "${product.name}" — it still has stock at: ${names}. Dispatch or zero it out there first, since this item is shared across every site.`);
+                return;
+            }
             if (!confirm(`Remove "${product.name}" from inventory? This can't be undone.`)) return;
             products = products.filter(p => p.code !== code);
             queuePush();
@@ -18629,10 +18680,21 @@
             // mirror (product.qty) covers the source deduction, while the
             // destination site — which isn't the active site — is written
             // straight into the stock map via setStockAt/addStockAt.
-            product.qty = round2((product.qty || 0) - qty); // mirrors into stock[activeSiteId] on next save
+            if (product.trackBottles) {
+                // qty here is the decimal bale-equivalent; trackBottles's
+                // real source of truth is bottleStock, so convert and move
+                // whole bottles instead, then re-derive both sites' qty.
+                const bpb = productBottlesPerBale(product);
+                const bottlesToMove = Math.round(qty * bpb);
+                if (bottlesToMove > (product.bottleStock || 0)) { errEl.textContent = `Only ${product.bottleStock || 0} bottles in stock at ${currentSite().name} — can't dispatch that many.`; return; }
+                product.bottleStock = (product.bottleStock || 0) - bottlesToMove;
+                syncBaleTrackingFields(product); // re-derives product.qty for the source site's mirror
+                addBottleStockAt(product, branchId, bottlesToMove);
+            } else {
+                product.qty = round2((product.qty || 0) - qty); // mirrors into stock[activeSiteId] on next save
+                addStockAt(product, branchId, qty);
+            }
             logStockMovement(product.code, product.name, -qty, `Dispatched to ${branch.name}`);
-
-            addStockAt(product, branchId, qty);
             product.updatedAt = Date.now();
             logStockMovement(product.code, product.name, qty, `Dispatch received from ${currentSite().name}`);
 
