@@ -8175,6 +8175,7 @@
 
         function confirmBrandedBale() {
             const errEl = document.getElementById('branded-bale-modal-error');
+            if (currentSite().type !== 'production') { errEl.textContent = `You're viewing "${currentSite().name}" (a Shop branch) — switch to 🏭 Production above first.`; return; }
             const product = products.find(p => p.code === brandedBaleModalCode);
             if (!product) { errEl.textContent = 'Item not found.'; return; }
             const qty = parseInt(document.getElementById('branded-bale-qty-input').value, 10);
@@ -11634,6 +11635,7 @@
         function submitProductionWizard() {
             const errEl = document.getElementById('wizard-error');
             errEl.textContent = '';
+            if (currentSite().type !== 'production') { errEl.textContent = `You're viewing "${currentSite().name}" (a Shop branch) — switch to 🏭 Production above first.`; return; }
             const code = document.getElementById('wizard-target-select').value;
             const target = products.find(p => p.code === code);
             if (!target) { errEl.textContent = 'Choose what you\'re producing.'; return; }
@@ -18231,6 +18233,7 @@
             const errEl = document.getElementById('production-error');
             errEl.textContent = '';
             if (activeSiteId === 'both') { errEl.textContent = 'Pick Shop or Production above first — a production run needs one definite site.'; return; }
+            if (currentSite().type !== 'production') { errEl.textContent = `You're viewing "${currentSite().name}" (a Shop branch) — switch to 🏭 Production above first. A production run always credits whichever site is currently active, and this isn't it.`; return; }
             const select = document.getElementById('production-target-select');
             const [kind, id] = (select.value || '').split(':');
             if (!kind || !id) { errEl.textContent = 'Choose what you\'re producing.'; return; }
