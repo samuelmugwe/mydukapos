@@ -6454,19 +6454,35 @@
             const list = document.getElementById('notif-list');
             if (!badge || !list) return;
             if (!canSeeLowStockAlerts()) { badge.style.display = 'none'; list.innerHTML = '<div class="notif-item empty-state" style="justify-content:center;">Nothing running low.</div>'; return; }
-            const items = lowStockDispatchItems();
-            if (items.length === 0) {
+
+            const lowStock = lowStockDispatchItems();
+            const requests = stockRequests.filter(r => r.status === 'pending');
+            const total = lowStock.length + requests.length;
+
+            if (total === 0) {
                 badge.style.display = 'none';
                 list.innerHTML = '<div class="notif-item empty-state" style="justify-content:center;">Nothing running low.</div>';
                 return;
             }
             badge.style.display = 'flex';
-            badge.textContent = items.length > 99 ? '99+' : String(items.length);
-            list.innerHTML = items.map(({ product, branch }) => `
+            badge.textContent = total > 99 ? '99+' : String(total);
+
+            // Requests staff explicitly asked for come first — they're a
+            // direct ask from a person, not just a threshold being crossed.
+            const requestRows = requests.map(r => `
+                <div class="notif-item">
+                    <span>📢 ${escapeHtml(r.name)} <span style="color:#7f8c8d; font-size:12px;">requested by ${escapeHtml(r.requestedBy)} at ${escapeHtml(r.fromSiteName)}</span></span>
+                    <span style="display:flex; gap:6px; align-items:center;">
+                        <button type="button" class="settings-small-btn" style="padding:2px 6px; font-size:11px;" onclick="event.stopPropagation(); toggleNotifications(event); dispatchFromNotifBell('${escapeQuotes(r.code)}')">🚚 Dispatch</button>
+                        <button type="button" class="settings-small-btn" style="padding:2px 6px; font-size:11px;" onclick="event.stopPropagation(); dismissStockRequest('${escapeQuotes(r.id)}')">✓</button>
+                    </span>
+                </div>`);
+            const lowStockRows = lowStock.map(({ product, branch }) => `
                 <div class="notif-item">
                     <span>${escapeHtml(product.name)} <span style="color:#7f8c8d; font-size:12px;">at ${escapeHtml(branch.name)}</span></span>
                     <span class="notif-qty">${stockAt(product, branch.id)} left</span>
-                </div>`).join('');
+                </div>`);
+            list.innerHTML = requestRows.join('') + lowStockRows.join('');
         }
 
         function toggleNotifications(evt) {
@@ -6563,6 +6579,7 @@
         // productionLog (which only records a production *run*, not stock
         // moving between sites afterward).
         let dispatchLog = JSON.parse(localStorage.getItem('aqua_dispatch_log') || 'null') || [];
+        let stockRequests = JSON.parse(localStorage.getItem('aqua_stock_requests') || 'null') || [];
         // Default bottles-per-bale for the Production Tab's bale-producing
         // flow — overridable per run, never touches existing bale stock
         // math elsewhere in the app.
@@ -6772,6 +6789,7 @@
             safeSetItem('aqua_restock_log', JSON.stringify(restockLog));
             safeSetItem('aqua_production_log', JSON.stringify(productionLog));
             safeSetItem('aqua_dispatch_log', JSON.stringify(dispatchLog));
+            safeSetItem('aqua_stock_requests', JSON.stringify(stockRequests));
             safeSetItem('aqua_default_bottles_per_bale', String(defaultBottlesPerBale));
             safeSetItem('aqua_production_steps_template', JSON.stringify(productionStepsTemplate));
             safeSetItem('aqua_raw_materials', JSON.stringify(rawMaterials));
@@ -6795,7 +6813,7 @@
                 const res = await fetch(apiUrl('/api/pos-sync'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ businessName, ownerName, sites, products, refillSizes, tanks, salesLog, stockMovementLog, bulkOrders, staff, bills, lowStockThreshold, rawMaterials, waterCostPerLiter, suppliers, deliveryZones, deliveryAgents, deliveryNotifications, vatRateA, vatRateB, kraEtimsReceiptsEnabled, expiryWarningDays, paymentAccounts, billPaymentDetails, receiptFooterNotes, receiptLogoData, receiptShowLogo, receiptEmail, receiptContact, receiptExtraInfo, receiptQrData, receiptShowQr, receiptQrCaption, customers, loyaltyEnabled, tokenValueKES, loyaltyTiers, lockedTabs, requireCartRemovePw, requireCartPricePw, returns, debts, expenses, recurringExpenses, pendingInvites, staffShifts, pendingExchanges, attendanceRoster, attendanceLog, adminActivityLog, offers, restockLog, productionLog, dispatchLog, defaultBottlesPerBale, productionStepsTemplate, pwHash: localStorage.getItem('aqua_pw_hash') || '', adminPwHash: localStorage.getItem('aqua_admin_pw_hash') || '' }),
+                    body: JSON.stringify({ businessName, ownerName, sites, products, refillSizes, tanks, salesLog, stockMovementLog, bulkOrders, staff, bills, lowStockThreshold, rawMaterials, waterCostPerLiter, suppliers, deliveryZones, deliveryAgents, deliveryNotifications, vatRateA, vatRateB, kraEtimsReceiptsEnabled, expiryWarningDays, paymentAccounts, billPaymentDetails, receiptFooterNotes, receiptLogoData, receiptShowLogo, receiptEmail, receiptContact, receiptExtraInfo, receiptQrData, receiptShowQr, receiptQrCaption, customers, loyaltyEnabled, tokenValueKES, loyaltyTiers, lockedTabs, requireCartRemovePw, requireCartPricePw, returns, debts, expenses, recurringExpenses, pendingInvites, staffShifts, pendingExchanges, attendanceRoster, attendanceLog, adminActivityLog, offers, restockLog, productionLog, dispatchLog, stockRequests, defaultBottlesPerBale, productionStepsTemplate, pwHash: localStorage.getItem('aqua_pw_hash') || '', adminPwHash: localStorage.getItem('aqua_admin_pw_hash') || '' }),
                 });
                 if (res.ok) {
                     const data = await res.json();
@@ -6831,7 +6849,7 @@
                 const res = await fetch(apiUrl('/api/pos-sync'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ businessName, ownerName, sites, products, refillSizes, tanks, salesLog, stockMovementLog, bulkOrders, staff, bills, lowStockThreshold, rawMaterials, waterCostPerLiter, suppliers, deliveryZones, deliveryAgents, deliveryNotifications, vatRateA, vatRateB, kraEtimsReceiptsEnabled, expiryWarningDays, paymentAccounts, billPaymentDetails, receiptFooterNotes, receiptLogoData, receiptShowLogo, receiptEmail, receiptContact, receiptExtraInfo, receiptQrData, receiptShowQr, receiptQrCaption, customers, loyaltyEnabled, tokenValueKES, loyaltyTiers, lockedTabs, requireCartRemovePw, requireCartPricePw, returns, debts, expenses, recurringExpenses, pendingInvites, staffShifts, pendingExchanges, attendanceRoster, attendanceLog, adminActivityLog, offers, restockLog, productionLog, dispatchLog, defaultBottlesPerBale, productionStepsTemplate, pwHash: localStorage.getItem('aqua_pw_hash') || '', adminPwHash: localStorage.getItem('aqua_admin_pw_hash') || '' }),
+                    body: JSON.stringify({ businessName, ownerName, sites, products, refillSizes, tanks, salesLog, stockMovementLog, bulkOrders, staff, bills, lowStockThreshold, rawMaterials, waterCostPerLiter, suppliers, deliveryZones, deliveryAgents, deliveryNotifications, vatRateA, vatRateB, kraEtimsReceiptsEnabled, expiryWarningDays, paymentAccounts, billPaymentDetails, receiptFooterNotes, receiptLogoData, receiptShowLogo, receiptEmail, receiptContact, receiptExtraInfo, receiptQrData, receiptShowQr, receiptQrCaption, customers, loyaltyEnabled, tokenValueKES, loyaltyTiers, lockedTabs, requireCartRemovePw, requireCartPricePw, returns, debts, expenses, recurringExpenses, pendingInvites, staffShifts, pendingExchanges, attendanceRoster, attendanceLog, adminActivityLog, offers, restockLog, productionLog, dispatchLog, stockRequests, defaultBottlesPerBale, productionStepsTemplate, pwHash: localStorage.getItem('aqua_pw_hash') || '', adminPwHash: localStorage.getItem('aqua_admin_pw_hash') || '' }),
                 });
                 if (res.ok) {
                     const data = await res.json();
@@ -6932,6 +6950,7 @@
                     if (Array.isArray(data.restockLog)) restockLog = data.restockLog;
                     if (Array.isArray(data.productionLog)) productionLog = data.productionLog;
                     if (Array.isArray(data.dispatchLog)) dispatchLog = data.dispatchLog;
+                    if (Array.isArray(data.stockRequests)) stockRequests = data.stockRequests;
                     if (typeof data.defaultBottlesPerBale === 'number') defaultBottlesPerBale = data.defaultBottlesPerBale;
                     if (Array.isArray(data.productionStepsTemplate)) productionStepsTemplate = data.productionStepsTemplate;
                     ensureBaleTrackingDefaults();
@@ -11166,6 +11185,7 @@
                     <td>
                         <button class="settings-small-btn" style="margin-bottom:4px;" onclick="openEditProductModal('${escapeQuotes(p.code)}')">✏️ Edit</button><br>
                         ${currentSite().type === 'production' ? `<button class="settings-small-btn" style="background:var(--success); color:#fff; margin-bottom:4px;" onclick="openDispatchModal('${escapeQuotes(p.code)}')">🚚 Dispatch</button><br>` : ''}
+                        ${currentSite().type === 'shop' ? `<button class="settings-small-btn" style="background:var(--secondary, #2980b9); color:#fff; margin-bottom:4px;" onclick="requestStockFromProduction('${escapeQuotes(p.code)}')">📢 Request</button><br>` : ''}
                         <button class="remove-btn" onclick="removeProduct('${escapeQuotes(p.code)}')">Remove</button>
                     </td>
                 </tr>`;
@@ -18658,6 +18678,41 @@
 
         function shopBranches() { return sites.filter(s => s.type === 'shop'); }
 
+        // Shop → Production stock request. Simple by design: no qty/note
+        // prompt, just "I need more of this" — Production sees it in
+        // their 🔔 bell and Dispatches from there when ready; there's no
+        // separate acceptance step on the Shop side.
+        function requestStockFromProduction(code) {
+            const product = products.find(p => p.code === code);
+            if (!product) return;
+            stockRequests.push({
+                id: genSaleId(), timestamp: new Date().toISOString(),
+                code: product.code, name: product.name,
+                fromSiteId: activeSiteId, fromSiteName: currentSite().name,
+                requestedBy: (currentServer && currentServer.name) || 'Admin',
+                status: 'pending',
+            });
+            queuePush();
+            showToast(`Requested "${product.name}" from Production.`);
+        }
+        function dismissStockRequest(id) {
+            const req = stockRequests.find(r => r.id === id);
+            if (req) req.status = 'fulfilled';
+            queuePush();
+            renderLowStockDispatchBanner();
+        }
+        // The bell's own Dispatch shortcut needs the same guard the
+        // Inventory row's Dispatch button gets for free (by only existing
+        // there while Production is active) — the bell itself is visible
+        // regardless of which site you're viewing.
+        function dispatchFromNotifBell(code) {
+            if (currentSite().type !== 'production') {
+                showToast(`Switch to 🏭 Production first — that's where this item's stock actually is.`, true);
+                return;
+            }
+            openDispatchModal(code);
+        }
+
         function openDispatchModal(code) {
             const product = products.find(p => p.code === code); // shared catalogue — dispatch source item
             if (!product) return;
@@ -18757,6 +18812,8 @@
             });
 
             closeSiteDispatchModal();
+            stockRequests.filter(r => r.status === 'pending' && r.code === product.code)
+                .forEach(r => { r.status = 'fulfilled'; });
             renderProductsTable();
             renderAllItemsGrid();
             renderSiteSwitcher();
