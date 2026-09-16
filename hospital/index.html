@@ -17974,7 +17974,7 @@
                     onblur="stopInvCellEdit('${escapeQuotes(id)}', '${field}'); ${commitCall}"
                     onkeydown="if(event.key==='Enter'){ this.blur(); } else if(event.key==='Escape'){ stopInvCellEdit('${escapeQuotes(id)}','${field}'); renderInventoryTable(); }">`;
                 if (!showScanBtn) return input;
-                return `<div style="display:flex; gap:4px; align-items:center;">${input}<button type="button" class="settings-small-btn" style="padding:0 6px;" onclick="openBarcodeScanModal(code => updateInventoryField('${escapeQuotes(id)}', '${field}', code))" title="Scan barcode">📷</button></div>`;
+                return `<div style="display:flex; gap:4px; align-items:center;">${input}<button type="button" class="settings-small-btn" style="padding:0 6px;" onmousedown="event.preventDefault()" onclick="openBarcodeScanModal(code => updateInventoryField('${escapeQuotes(id)}', '${field}', code))" title="Scan barcode">📷</button></div>`;
             }
             const displayVal = (value || '').trim() ? escapeHtml(value) : '<span style="color:#bbb;">(click to set)</span>';
             return `<div class="inv-cell-display" title="Click to edit" onclick="startInvCellEdit('${escapeQuotes(id)}', '${field}')">${displayVal}</div>`;

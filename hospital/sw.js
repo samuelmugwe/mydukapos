@@ -8,7 +8,7 @@
 //
 // Bump CACHE_NAME whenever index.html changes materially, so returning devices
 // pick up the fresh copy instead of a stale cached one.
-const CACHE_NAME = 'hospitalpos-shell-v50';
+const CACHE_NAME = 'hospitalpos-shell-v51';
 
 // How long to wait for the network on a navigation before falling back to the
 // cached copy. Long enough to win on a normal connection, short enough that a
