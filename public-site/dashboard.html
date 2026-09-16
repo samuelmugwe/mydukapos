@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your account — mydukapos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --ink: #1B2E28; --ink-2: #223B33; --paper: #F7F3E8; --paper-2: #FFFDF8;
+        --signal: #E8A33D; --leaf: #4C9A6A; --rust: #C1502E;
+        --display: 'Space Grotesk', sans-serif; --body: 'IBM Plex Sans', sans-serif; --mono: 'IBM Plex Mono', monospace;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+    .wrap { max-width: 480px; margin: 0 auto; padding: 48px 24px 80px; }
+    a.wordmark { display: block; font-family: var(--display); font-weight: 700; font-size: 20px; color: var(--ink); text-decoration: none; margin-bottom: 28px; }
+    a.wordmark .dot { color: var(--signal); }
+    h1 { font-family: var(--display); font-size: 26px; margin: 0 0 6px; }
+    p.hint { font-size: 13.5px; color: var(--ink-2); opacity: 0.75; margin: 0 0 22px; }
+    .card { background: var(--paper-2); border: 1px solid rgba(27,46,40,0.12); border-radius: 8px; padding: 24px; }
+    label { display: block; font-size: 12px; font-family: var(--mono); letter-spacing: 0.05em; text-transform: uppercase; color: rgba(27,46,40,0.55); margin: 14px 0 6px; }
+    label:first-of-type { margin-top: 0; }
+    input, select { width: 100%; padding: 11px 12px; border-radius: 4px; border: 1px solid rgba(27,46,40,0.18); background: #fff; font-family: var(--body); font-size: 14.5px; color: var(--ink); }
+    input:focus, select:focus { outline: none; border-color: var(--signal); }
+    .btn { width: 100%; margin-top: 18px; background: var(--signal); color: var(--ink); border: none; border-radius: 4px; padding: 13px; font-weight: 700; font-size: 14.5px; cursor: pointer; }
+    .btn:disabled { opacity: 0.6; cursor: default; }
+    .btn.secondary { background: transparent; border: 1px solid rgba(27,46,40,0.25); color: var(--ink); }
+    .btn.danger { background: transparent; border: 1px solid var(--rust); color: var(--rust); }
+    .error { color: var(--rust); font-size: 13px; min-height: 18px; margin: 8px 0 0; }
+    .row { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-bottom: 1px solid rgba(27,46,40,0.08); font-size: 14px; }
+    .row:last-child { border-bottom: none; }
+    .row .k { color: rgba(27,46,40,0.6); }
+    .row .v { font-weight: 600; text-align: right; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge.active { background: rgba(76,154,106,0.15); color: var(--leaf); }
+    .badge.expired, .badge.deleted { background: rgba(193,80,46,0.15); color: var(--rust); }
+    .badge.none { background: rgba(27,46,40,0.1); color: rgba(27,46,40,0.6); }
+    .link-row { display: flex; gap: 8px; margin-top: 6px; }
+    .link-row input { font-family: var(--mono); font-size: 12.5px; }
+    .link-row button { flex-shrink: 0; background: var(--ink); color: var(--paper); border: none; border-radius: 4px; padding: 0 14px; font-size: 13px; cursor: pointer; }
+    .switch { text-align: center; font-size: 13px; margin-top: 16px; color: rgba(27,46,40,0.65); }
+    .switch a { color: var(--leaf); font-weight: 600; text-decoration: none; }
+    .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <a class="wordmark" href="index.html">mydukapos<span class="dot">.</span></a>
+
+    <div id="login-view">
+        <h1>Sign in</h1>
+        <p class="hint">Manage your free demo account.</p>
+        <div class="card">
+            <label for="login-email">Email address</label>
+            <input type="email" id="login-email" placeholder="you@example.com">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" placeholder="Your master password">
+            <p class="error" id="login-error"></p>
+            <button class="btn" id="login-btn" onclick="doLogin()">Sign in</button>
+        </div>
+        <p class="switch"><a href="javascript:void(0)" onclick="showForgotView()">Forgot your password?</a></p>
+        <p class="switch">No account yet? <a href="index.html#apps">Choose a product to get started →</a></p>
+    </div>
+
+    <div id="forgot-view" class="hidden">
+        <h1>Reset your password</h1>
+        <p class="hint">Enter your email and we'll send you a reset link.</p>
+        <div class="card">
+            <label for="forgot-email">Email address</label>
+            <input type="email" id="forgot-email" placeholder="you@example.com">
+            <p class="error" id="forgot-error"></p>
+            <p class="hint" id="forgot-success" style="display:none; color:var(--leaf);"></p>
+            <button class="btn" id="forgot-btn" onclick="doForgotPassword()">Send reset link</button>
+        </div>
+        <p class="switch"><a href="javascript:void(0)" onclick="showLoginView()">← Back to sign in</a></p>
+    </div>
+
+    <div id="reset-view" class="hidden">
+        <h1>Set a new password</h1>
+        <p class="hint">Choose a new master password for your account.</p>
+        <div class="card">
+            <label for="reset-password">New password</label>
+            <input type="password" id="reset-password" placeholder="At least 4 digits or characters">
+            <label for="reset-password-confirm">Confirm new password</label>
+            <input type="password" id="reset-password-confirm" placeholder="Retype your new password">
+            <p class="error" id="reset-error"></p>
+            <button class="btn" id="reset-btn" onclick="doResetPassword()">Set new password</button>
+        </div>
+    </div>
+
+    <div id="dashboard-view" class="hidden">
+        <h1 id="greeting">Welcome back</h1>
+        <p class="hint" id="account-email"></p>
+        <div class="card">
+            <div class="row"><span class="k">Demo status</span><span class="v"><span class="badge" id="status-badge">—</span></span></div>
+            <div class="row"><span class="k">Product</span><span class="v" id="row-product">—</span></div>
+            <div class="row"><span class="k">Business name</span><span class="v" id="row-business">—</span></div>
+            <div class="row"><span class="k">Expires</span><span class="v" id="row-expires">—</span></div>
+
+            <div id="link-block" class="hidden">
+                <label>Your demo link</label>
+                <div class="link-row">
+                    <input type="text" id="link-output" readonly>
+                    <button onclick="copyLink()">Copy</button>
+                </div>
+                <a href="#" target="_blank" rel="noopener" id="open-link" style="display:inline-block; margin-top:10px; font-size:13.5px; font-weight:600; color:var(--leaf); text-decoration:none;">Open it now →</a>
+                <button class="btn danger" onclick="doDeleteDemo()">Delete this demo</button>
+            </div>
+
+            <div id="generate-block" class="hidden">
+                <label for="gen-product">Choose a product</label>
+                <select id="gen-product"></select>
+                <label for="gen-business">Business name</label>
+                <input type="text" id="gen-business" placeholder="e.g. Mama Njeri Duka" maxlength="60">
+                <p class="error" id="gen-error"></p>
+                <button class="btn" id="gen-btn" onclick="doGenerate()">Generate my free demo</button>
+            </div>
+
+            <div id="used-block" class="hidden">
+                <p class="hint" style="margin-top:14px;">Your one free demo has already been used. Contact us if you need it reset.</p>
+            </div>
+        </div>
+        <button class="btn secondary" onclick="doLogout()">Sign out</button>
+    </div>
+</div>
+
+<script>
+    const PRODUCTS = { shop: 'Shop POS', hotel: 'Hotel/Restaurant/Bar', hospital: 'Hospital Management', school: 'School Fees', production: 'Production POS', pharmacy: 'Pharmacy POS', services: 'Services (Bookings)', water: 'Water Refill (AquaPOS)' };
+    let lastLink = '';
+
+    function token() { return localStorage.getItem('mydukapos_demo_token') || ''; }
+    function setToken(t) { localStorage.setItem('mydukapos_demo_token', t); }
+    function clearToken() { localStorage.removeItem('mydukapos_demo_token'); }
+
+    function hideAllViews() {
+        ['login-view', 'forgot-view', 'reset-view', 'dashboard-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    }
+    function showLoginView() { hideAllViews(); document.getElementById('login-view').classList.remove('hidden'); }
+    function showForgotView() {
+        hideAllViews();
+        document.getElementById('forgot-view').classList.remove('hidden');
+        document.getElementById('forgot-error').textContent = '';
+        document.getElementById('forgot-success').style.display = 'none';
+    }
+
+    async function doForgotPassword() {
+        const email = document.getElementById('forgot-email').value.trim();
+        const errEl = document.getElementById('forgot-error');
+        const successEl = document.getElementById('forgot-success');
+        const btn = document.getElementById('forgot-btn');
+        errEl.textContent = ''; successEl.style.display = 'none';
+        if (!email) { errEl.textContent = 'Enter your email address.'; return; }
+        btn.disabled = true; btn.textContent = 'Sending…';
+        try {
+            const res = await fetch('/api/demo-account', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'forgot-password', email }),
+            });
+            const data = await res.json();
+            successEl.textContent = data.message || "If that email has an account, we've sent a password reset link to it.";
+            successEl.style.display = 'block';
+        } catch (e) {
+            errEl.textContent = 'Could not reach the server — check your connection and try again.';
+        } finally {
+            btn.disabled = false; btn.textContent = 'Send reset link';
+        }
+    }
+
+    async function doResetPassword() {
+        const params = new URLSearchParams(window.location.search);
+        const resetToken = params.get('reset');
+        const password = document.getElementById('reset-password').value;
+        const confirmPassword = document.getElementById('reset-password-confirm').value;
+        const errEl = document.getElementById('reset-error');
+        const btn = document.getElementById('reset-btn');
+        errEl.textContent = '';
+        if (password.length < 4) { errEl.textContent = 'Password must be at least 4 characters (a 4-digit PIN works fine).'; return; }
+        if (password !== confirmPassword) { errEl.textContent = 'Passwords do not match.'; return; }
+        btn.disabled = true; btn.textContent = 'Saving…';
+        try {
+            const res = await fetch('/api/demo-account', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'reset-password', token: resetToken, password, confirmPassword }),
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || 'Could not reset your password.');
+            setToken(data.token);
+            window.history.replaceState({}, document.title, 'dashboard.html');
+            await loadDashboard();
+        } catch (e) {
+            errEl.textContent = e.message;
+        } finally {
+            btn.disabled = false; btn.textContent = 'Set new password';
+        }
+    }
+
+    async function api(action, extra = {}) {
+        const res = await fetch('/api/demo-account', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, token: token(), ...extra }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+        return data;
+    }
+
+    async function doLogin() {
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        const errEl = document.getElementById('login-error');
+        const btn = document.getElementById('login-btn');
+        errEl.textContent = '';
+        if (!email || !password) { errEl.textContent = 'Enter your email and password.'; return; }
+        btn.disabled = true; btn.textContent = 'Signing in…';
+        try {
+            const res = await fetch('/api/demo-account', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'login', email, password }),
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || 'Sign-in failed.');
+            setToken(data.token);
+            await loadDashboard();
+        } catch (e) {
+            errEl.textContent = e.message;
+        } finally {
+            btn.disabled = false; btn.textContent = 'Sign in';
+        }
+    }
+
+    function doLogout() {
+        clearToken();
+        showLoginView();
+    }
+
+    async function loadDashboard() {
+        if (!token()) return;
+        try {
+            const data = await api('dashboard');
+            hideAllViews();
+            document.getElementById('dashboard-view').classList.remove('hidden');
+            document.getElementById('greeting').textContent = 'Welcome back, ' + (data.fullName || '').split(' ')[0];
+            document.getElementById('account-email').textContent = data.email;
+
+            const badge = document.getElementById('status-badge');
+            badge.textContent = data.demoStatus;
+            badge.className = 'badge ' + data.demoStatus;
+
+            document.getElementById('row-product').textContent = data.product ? (PRODUCTS[data.product] || data.product) : '—';
+            document.getElementById('row-business').textContent = data.product ? (data.link ? new URL(data.link).hostname.split('.')[0] : '—') : '—';
+            document.getElementById('row-expires').textContent = data.expiresAt ? new Date(data.expiresAt).toLocaleString() : '—';
+
+            const linkBlock = document.getElementById('link-block');
+            const genBlock = document.getElementById('generate-block');
+            const usedBlock = document.getElementById('used-block');
+            linkBlock.classList.add('hidden'); genBlock.classList.add('hidden'); usedBlock.classList.add('hidden');
+
+            if (data.demoStatus === 'active' && data.link) {
+                lastLink = data.link;
+                document.getElementById('link-output').value = data.link;
+                document.getElementById('open-link').href = data.link;
+                linkBlock.classList.remove('hidden');
+            } else if (!data.demoUsed) {
+                const sel = document.getElementById('gen-product');
+                sel.innerHTML = Object.entries(PRODUCTS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+                genBlock.classList.remove('hidden');
+            } else {
+                usedBlock.classList.remove('hidden');
+            }
+        } catch (e) {
+            clearToken();
+            showLoginView();
+            document.getElementById('login-error').textContent = e.message;
+        }
+    }
+
+    async function doGenerate() {
+        const product = document.getElementById('gen-product').value;
+        const businessName = document.getElementById('gen-business').value.trim();
+        const errEl = document.getElementById('gen-error');
+        const btn = document.getElementById('gen-btn');
+        errEl.textContent = '';
+        if (!businessName) { errEl.textContent = 'Enter your business name.'; return; }
+        btn.disabled = true; btn.textContent = 'Generating…';
+        try {
+            await api('generate-demo', { product, businessName });
+            await loadDashboard();
+        } catch (e) {
+            errEl.textContent = e.message;
+        } finally {
+            btn.disabled = false; btn.textContent = 'Generate my free demo';
+        }
+    }
+
+    async function doDeleteDemo() {
+        if (!confirm('Delete your demo? This permanently uses up your one free demo.')) return;
+        try {
+            await api('delete-demo');
+            await loadDashboard();
+        } catch (e) {
+            alert(e.message);
+        }
+    }
+
+    function copyLink() {
+        const input = document.getElementById('link-output');
+        input.select();
+        navigator.clipboard?.writeText(lastLink).catch(() => document.execCommand('copy'));
+    }
+
+    (function init() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('reset')) {
+            hideAllViews();
+            document.getElementById('reset-view').classList.remove('hidden');
+            return;
+        }
+        if (token()) loadDashboard();
+    })();
+</script>
+</body>
+</html>

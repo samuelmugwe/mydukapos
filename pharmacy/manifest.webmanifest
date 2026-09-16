@@ -1,0 +1,40 @@
+{
+  "id": "/pharmacy/?source=pwa",
+  "name": "PharmacyPOS",
+  "short_name": "PharmacyPOS",
+  "description": "Offline-capable point of sale for pharmacies \u2014 batch/expiry-tracked inventory, prescriptions, receipts, and staff accounts.",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#2C3E50",
+  "theme_color": "#2C3E50",
+  "categories": ["business", "productivity", "shopping"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

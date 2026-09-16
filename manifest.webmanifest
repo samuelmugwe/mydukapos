@@ -1,0 +1,40 @@
+{
+  "id": "/?source=pwa",
+  "name": "MinimartPOS",
+  "short_name": "MinimartPOS",
+  "description": "Offline-capable point of sale for shops, hardware stores, and supermarkets \u2014 inventory, receipts, and staff accounts.",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#2C3E50",
+  "theme_color": "#2C3E50",
+  "categories": ["business", "productivity", "shopping"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

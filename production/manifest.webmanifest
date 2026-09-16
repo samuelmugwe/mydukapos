@@ -1,0 +1,40 @@
+{
+  "id": "/production/?source=pwa",
+  "name": "ProductionPOS",
+  "short_name": "ProductionPOS",
+  "description": "Offline-capable point of sale with production, services, and equipment rental \u2014 build items from raw stock, sell or hire, and track returns.",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#2C3E50",
+  "theme_color": "#2C3E50",
+  "categories": ["business", "productivity", "shopping"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

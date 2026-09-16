@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mydukapos — product details</title>
+<meta name="description" content="See what each mydukapos product does, and generate a free 72-hour demo on your own phone.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --ink: #1B2E28; --ink-2: #223B33; --paper: #F7F3E8; --paper-2: #FFFDF8;
+        --signal: #E8A33D; --leaf: #4C9A6A; --rust: #C1502E;
+        --ink-mute: #8FA69B; --ink-mute-on-paper: #5B6B60;
+        --display: 'Space Grotesk', sans-serif; --body: 'IBM Plex Sans', sans-serif; --mono: 'IBM Plex Mono', monospace;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+    .eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--leaf); font-weight: 600; margin: 0 0 10px; }
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+    }
+
+    /* ---------- MOTION SYSTEM (mirrors index.html) ---------- */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .reveal.in-view { opacity: 1; transform: translateY(0); }
+    .reveal-stagger > * { opacity: 0; }
+    .reveal-stagger.in-view > * { animation: reveal-stagger-in 0.5s ease both; }
+    .reveal-stagger.in-view > *:nth-child(1) { animation-delay: 0.03s; }
+    .reveal-stagger.in-view > *:nth-child(2) { animation-delay: 0.09s; }
+    .reveal-stagger.in-view > *:nth-child(3) { animation-delay: 0.15s; }
+    .reveal-stagger.in-view > *:nth-child(4) { animation-delay: 0.21s; }
+    .reveal-stagger.in-view > *:nth-child(5) { animation-delay: 0.27s; }
+    .reveal-stagger.in-view > *:nth-child(6) { animation-delay: 0.33s; }
+    @keyframes reveal-stagger-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+    .pulse-dot { position: relative; display: inline-flex; width: 8px; height: 8px; border-radius: 50%; background: var(--leaf); flex-shrink: 0; }
+    .pulse-dot::after {
+        content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--leaf);
+        animation: pulse-ring 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse-ring { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.8); opacity: 0; } }
+
+    .glow-cta { position: relative; }
+    .glow-cta::before {
+        content: ''; position: absolute; inset: -6px; border-radius: 8px;
+        background: var(--signal); opacity: 0.35; filter: blur(14px); z-index: -1;
+        transition: opacity 0.25s ease, filter 0.25s ease;
+    }
+    .glow-cta:hover::before { opacity: 0.55; filter: blur(18px); }
+
+    header.site-nav { background: var(--ink); border-bottom: 1px solid rgba(247,243,232,0.1); }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; max-width: 1100px; margin: 0 auto; }
+    .wordmark { font-family: var(--display); font-weight: 700; font-size: 20px; color: var(--paper); text-decoration: none; }
+    .wordmark .dot { color: var(--signal); }
+    .back-link { color: rgba(247,243,232,0.75); text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+    .back-link:hover { color: var(--paper); }
+
+    .btn { display: inline-flex; align-items: center; gap: 8px; font-family: var(--body); font-weight: 600; font-size: 15px; padding: 13px 24px; border-radius: 3px; text-decoration: none; border: 1.5px solid transparent; cursor: pointer; transition: transform 0.22s ease, box-shadow 0.22s ease; }
+    .btn:hover { transform: translateY(-1px) scale(1.02); }
+    .btn:active { transform: translateY(0) scale(0.97); transition-duration: 0.1s; }
+    .btn-primary { background: var(--signal); color: var(--ink); }
+    .btn-primary:hover { box-shadow: 0 6px 18px rgba(232,163,61,0.35); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ---------- SWITCHER ---------- */
+    .switcher { background: var(--ink-2); padding: 14px 0; overflow-x: auto; }
+    .switcher-inner { display: flex; gap: 8px; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .switcher a {
+        flex-shrink: 0; text-decoration: none; color: rgba(247,243,232,0.65); font-size: 13.5px; font-weight: 500;
+        padding: 7px 14px; border-radius: 20px; border: 1px solid rgba(247,243,232,0.15); white-space: nowrap;
+        transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+    }
+    .switcher a.active { background: var(--signal); color: var(--ink); border-color: var(--signal); font-weight: 600; }
+    .switcher a:not(.active):hover { border-color: rgba(247,243,232,0.4); color: var(--paper); transform: translateY(-1px); }
+    .switcher a:active { transform: scale(0.96); transition-duration: 0.1s; }
+
+    /* ---------- PRODUCT HERO ---------- */
+    .p-hero { background: var(--ink); color: var(--paper); padding: 56px 0 60px; position: relative; overflow: hidden; }
+    .p-hero::before {
+        content: ''; position: absolute; inset: 0;
+        background-image: radial-gradient(circle at 10% 10%, rgba(232,163,61,0.18), transparent 42%),
+                           radial-gradient(circle at 92% 85%, rgba(76,154,106,0.16), transparent 45%);
+        pointer-events: none;
+    }
+    .p-hero::after {
+        content: ''; position: absolute; inset: 0;
+        background-image: repeating-linear-gradient(115deg, rgba(247,243,232,0.02) 0px, rgba(247,243,232,0.02) 1px, transparent 1px, transparent 44px);
+        pointer-events: none;
+    }
+    .p-hero-inner { display: flex; align-items: flex-start; gap: 22px; position: relative; }
+    .p-hero .icon {
+        font-size: 34px; line-height: 1; flex-shrink: 0; width: 74px; height: 74px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; background: rgba(247,243,232,0.1);
+        border: 1px solid rgba(247,243,232,0.16);
+    }
+    .p-hero h1 { font-size: clamp(28px, 4vw, 42px); margin-bottom: 12px; }
+    .p-hero p { color: rgba(247,243,232,0.78); font-size: 16.5px; max-width: 64ch; margin: 0; }
+
+    /* ---------- BODY ---------- */
+    section { padding: 60px 0; }
+    .p-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: start; }
+    @media (max-width: 860px) { .p-grid { grid-template-columns: 1fr; } }
+
+    .feature-list { list-style: none; margin: 0; padding: 0; }
+    .feature-list li { display: flex; gap: 14px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid rgba(27,46,40,0.08); transition: transform 0.22s ease, padding-left 0.22s ease; }
+    .feature-list li:hover { transform: translateX(3px); }
+    .feature-list li:last-child { border-bottom: none; }
+    .feature-list .mark {
+        color: var(--paper); font-weight: 700; flex-shrink: 0; font-size: 12px; margin-top: 1px;
+        width: 22px; height: 22px; border-radius: 50%; background: var(--leaf);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .feature-list .txt strong { display: block; font-size: 15px; margin-bottom: 2px; }
+    .feature-list .txt span { font-size: 13.5px; color: var(--ink-mute-on-paper); }
+
+    .shot-frame {
+        background: var(--paper-2); border: 1px solid rgba(27,46,40,0.1); border-radius: 6px;
+        padding: 10px; box-shadow: 0 24px 50px -24px rgba(27,46,40,0.3); position: relative;
+    }
+    .shot-frame img { border-radius: 3px; }
+    .shot-caption { text-align: center; font-family: var(--mono); font-size: 12px; color: var(--ink-mute-on-paper); margin-top: 10px; }
+
+    /* ---------- SCREENSHOT GALLERY ---------- */
+    /* Native horizontal scroll-snap does the swipe-to-advance on touch for
+       free; the arrow buttons and dots are the click-to-advance equivalent
+       for a mouse. Single-photo products get none of this chrome — just
+       the plain image, so there's nothing to click through when there's
+       only one anyway. */
+    .shot-gallery-track {
+        display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+        border-radius: 3px; -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .shot-gallery-track::-webkit-scrollbar { display: none; }
+    .shot-gallery-track img { flex: 0 0 100%; width: 100%; scroll-snap-align: start; border-radius: 3px; }
+    .shot-nav-btn {
+        position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+        width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+        background: rgba(27,46,40,0.75); color: var(--paper); font-size: 16px;
+        display: flex; align-items: center; justify-content: center;
+        transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .shot-nav-btn:hover { background: var(--ink); transform: translateY(-50%) scale(1.08); }
+    .shot-nav-prev { left: 20px; }
+    .shot-nav-next { right: 20px; }
+    .shot-dots { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
+    .shot-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(27,46,40,0.2); border: none; cursor: pointer; padding: 0; transition: background 0.2s ease, transform 0.2s ease; }
+    .shot-dot.active { background: var(--signal); transform: scale(1.2); }
+
+    /* ---------- DEMO PANEL ---------- */
+    .demo-panel {
+        background: var(--ink); color: var(--paper); border-radius: 6px; padding: 32px;
+        position: sticky; top: 24px; box-shadow: 0 30px 60px -30px rgba(27,46,40,0.4);
+        overflow: hidden;
+    }
+    .demo-panel::before {
+        content: ''; position: absolute; inset: 0; border-radius: inherit;
+        background-image: radial-gradient(circle at 100% 0%, rgba(232,163,61,0.16), transparent 55%),
+                           radial-gradient(circle at 0% 100%, rgba(76,154,106,0.14), transparent 55%);
+        pointer-events: none;
+    }
+    .demo-panel > * { position: relative; }
+    .demo-panel h3 { font-size: 20px; margin-bottom: 8px; }
+    .demo-panel p.hint { font-size: 13.5px; color: rgba(247,243,232,0.65); margin: 0 0 20px; }
+    .demo-panel label { display: block; font-size: 12.5px; font-family: var(--mono); letter-spacing: 0.05em; text-transform: uppercase; color: rgba(247,243,232,0.6); margin-bottom: 6px; }
+    .demo-panel input {
+        width: 100%; padding: 12px 14px; border-radius: 3px; border: 1.5px solid rgba(247,243,232,0.2);
+        background: rgba(247,243,232,0.06); color: var(--paper); font-family: var(--body); font-size: 15px; margin-bottom: 16px;
+    }
+    .demo-panel input:focus { outline: none; border-color: var(--signal); }
+    .demo-panel input::placeholder { color: rgba(247,243,232,0.35); }
+    .demo-error { color: #F3A6A6; font-size: 13px; min-height: 18px; margin: 0 0 8px; }
+    .demo-result { display: none; margin-top: 18px; padding: 16px; background: rgba(76,154,106,0.15); border: 1px solid rgba(76,154,106,0.4); border-radius: 4px; }
+    .demo-result.show { display: block; }
+    .demo-result .lbl { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.06em; color: var(--leaf); text-transform: uppercase; margin-bottom: 8px; }
+    .demo-result .link-row { display: flex; gap: 8px; }
+    .demo-result input { margin: 0; font-family: var(--mono); font-size: 13px; }
+    .demo-result .copy-btn { background: var(--signal); color: var(--ink); border: none; border-radius: 3px; padding: 0 14px; font-weight: 600; font-size: 13px; cursor: pointer; flex-shrink: 0; }
+    .demo-result .open-link { display: inline-block; margin-top: 12px; color: var(--signal); font-size: 13.5px; font-weight: 600; text-decoration: none; }
+    .demo-fine { font-size: 12px; color: rgba(247,243,232,0.5); margin-top: 16px; }
+    .price-line { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; padding-top: 18px; border-top: 1px dashed rgba(247,243,232,0.2); }
+    .price-line .amt { font-family: var(--display); font-weight: 700; font-size: 20px; }
+
+    footer { background: var(--ink); color: rgba(247,243,232,0.5); border-top: 1px solid rgba(247,243,232,0.1); padding: 32px 0; text-align: center; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header class="site-nav">
+    <div class="nav-inner">
+        <a href="/" class="wordmark" id="site-wordmark">myduka<span class="dot">pos</span></a>
+        <a href="/#apps" class="back-link">← All products</a>
+    </div>
+</header>
+
+<nav class="switcher">
+    <div class="switcher-inner" id="switcher-links"></div>
+</nav>
+
+<div class="p-hero">
+    <div class="wrap p-hero-inner">
+        <div class="icon" id="p-icon">🏪</div>
+        <div>
+            <h1 id="p-name">Loading…</h1>
+            <p id="p-tagline"></p>
+        </div>
+    </div>
+</div>
+
+<section>
+    <div class="wrap p-grid">
+        <div class="reveal">
+            <p class="eyebrow">What it does</p>
+            <h2 style="margin-bottom:24px;">Everything this business needs, in one till</h2>
+            <ul class="feature-list" id="feature-list"></ul>
+
+            <div style="margin-top:40px;">
+                <p class="eyebrow">A look inside</p>
+                <div class="shot-frame">
+                    <img id="p-screenshot" src="" alt="">
+                </div>
+                <p class="shot-caption" id="p-screenshot-caption"></p>
+            </div>
+        </div>
+
+        <div class="reveal">
+            <div class="demo-panel">
+                <p class="eyebrow" style="color:var(--signal);">Try it free</p>
+                <h3>Generate your demo</h3>
+                <p class="hint">Works for <span id="demo-duration-hint">7 days</span>, on your own phone or computer, with your own data. One free demo per account. No card, no commitment.</p>
+
+                <label for="demo-full-name">Full name</label>
+                <input type="text" id="demo-full-name" placeholder="e.g. Jane Njeri" maxlength="80">
+                <label for="demo-phone">Phone number</label>
+                <input type="tel" id="demo-phone" placeholder="e.g. 07XX XXX XXX" maxlength="20">
+                <label for="demo-email">Email address</label>
+                <input type="email" id="demo-email" placeholder="you@example.com" maxlength="120">
+                <label for="demo-business-name">Your business name</label>
+                <input type="text" id="demo-business-name" placeholder="e.g. Mama Njeri Duka" maxlength="60">
+                <label for="demo-password">Master password</label>
+                <input type="password" id="demo-password" placeholder="At least 4 digits or characters" maxlength="100">
+                <label for="demo-password-confirm">Confirm password</label>
+                <input type="password" id="demo-password-confirm" placeholder="Retype your password" maxlength="100">
+                <p class="demo-error" id="demo-error"></p>
+                <button class="btn btn-primary" id="demo-generate-btn" style="width:100%; justify-content:center;" onclick="generateDemo()">Create account &amp; generate my free demo</button>
+                <p class="demo-fine" style="margin-top:10px;">Already have an account? <a href="dashboard.html" style="color:var(--signal);">Sign in to your dashboard</a></p>
+
+                <div class="demo-result" id="demo-result">
+                    <div class="lbl">Your demo is ready</div>
+                    <div class="link-row">
+                        <input type="text" id="demo-link-output" readonly>
+                        <button class="copy-btn" onclick="copyDemoLink()">Copy</button>
+                    </div>
+                    <a href="#" target="_blank" rel="noopener" class="open-link" id="demo-open-link">Open it now →</a>
+                </div>
+
+                <div class="price-line">
+                    <span style="font-size:13.5px; color:rgba(247,243,232,0.7);">Like it? Keep it forever for</span>
+                    <span class="amt">KES <span id="price-amount">3,000</span></span>
+                </div>
+                <p class="demo-fine">One payment, no renewal. Your demo's data carries over if you upgrade to permanent.</p>
+                <div id="alt-payment-methods"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    © <span id="foot-year"></span> mydukapos. Built in Kenya, for Kenyan business.
+</footer>
+
+<script>
+    const PRODUCTS = {
+        shop: {
+            name: 'Shop POS', icon: '🏪',
+            tagline: 'For retail shops, hardware stores, supermarkets, and minimarts — inventory that actually matches what\u2019s on the shelf.',
+            features: [
+                ['Barcode-ready inventory', 'Scan to sell, scan to add stock — with wholesale and retail pricing on every item.'],
+                ['Multi-branch, one view', 'Run several branches and see stock, staff, and sales across all of them from your own phone.'],
+                ['Shared warehouse ("Store")', 'Keep stock that isn\u2019t assigned to any one branch yet, and pull it into a branch when needed.'],
+                ['Cross-branch sales', 'Sell an item from another branch\u2019s stock right at your own counter — the sale and revenue land at the right branch automatically.'],
+                ['Wholesale Contracts', 'Hand stock to an agent or reseller, track what they\u2019ve sold versus what they still owe, all in one place.'],
+                ['Trade Credits', 'Track money owed to or from outside parties, separate from day-to-day sales.'],
+                ['M-Pesa built in', 'Send an STK push straight from checkout — no separate till number to manage.'],
+                ['KRA eTIMS compliant', 'Every sale can submit to KRA in real time, with the signature shown on the receipt.'],
+                ['Works with zero signal', 'Every sale is saved on the device first, and syncs the moment you\u2019re back online.'],
+            ],
+        },
+        hotel: {
+            name: 'Hotel / Restaurant / Bar', icon: '🏨',
+            tagline: 'One product for hotels, restaurants, and bars — tables, rooms, takeaway, and the kitchen, all connected.',
+            features: [
+                ['Tables, rooms, and takeaway', 'Assign a sale to a table or a room, or mark it takeaway — tracked separately, billed correctly.'],
+                ['Kitchen tickets print themselves', 'The moment an order is taken, the kitchen gets its own ticket — no shouting orders across the room.'],
+                ['Takeaway orders, tracked', 'Preparing, ready, or collected — see exactly where every takeaway order stands.'],
+                ['Dish recipes', 'Build a dish from its ingredients, and stock automatically adjusts as dishes sell.'],
+                ['Bills and running tabs', 'Let a table run a tab and settle it later — nothing is forgotten at close.'],
+                ['Dual pricing', 'Different pricing for dine-in versus takeaway or wholesale, selectable right at checkout.'],
+                ['M-Pesa built in', 'Send an STK push straight from checkout — no separate till number to manage.'],
+                ['Works with zero signal', 'Every sale is saved on the device first, and syncs the moment you\u2019re back online.'],
+            ],
+        },
+        hospital: {
+            name: 'Hospital / HMIS', icon: '🩺',
+            tagline: 'A lightweight hospital management system — patient records, consultations, and billing without the complexity of enterprise HMIS software.',
+            features: [
+                ['Patient records', 'Register a patient once, and their history is there every time they come back.'],
+                ['Consultations and billing together', 'A visit\u2019s charges build up naturally as care happens, not as a separate step afterward.'],
+                ['Pharmacy dispensing', 'Dispense straight from the same system that recorded the consultation.'],
+                ['Multi-staff, one record', 'Reception, nursing, and billing all work from the same patient file.'],
+                ['Trade Credits & Bills', 'Track outstanding balances and money owed to or from outside parties.'],
+                ['M-Pesa built in', 'Send an STK push straight from checkout — no separate till number to manage.'],
+                ['Works with zero signal', 'A clinic with unreliable power or internet still runs, uninterrupted.'],
+            ],
+        },
+        school: {
+            name: 'School Fees', icon: '🎓',
+            tagline: 'Fee collection and student records built for how a Kenyan school bursar\u2019s office actually works.',
+            features: [
+                ['Student registry', 'Admission number, class, guardian details — searchable in seconds.'],
+                ['Fee balances at a glance', 'See who\u2019s paid, who owes, and how much, without digging through a ledger.'],
+                ['Instant receipts', 'Every payment gets a receipt on the spot — no disputes at term opening.'],
+                ['Canteen sales too', 'A shop/canteen counter runs alongside fee collection in the same app.'],
+                ['M-Pesa built in', 'Parents can pay by STK push directly at the counter.'],
+                ['Works with zero signal', 'Every payment is saved on the device first, and syncs the moment you\u2019re back online.'],
+            ],
+        },
+        production: {
+            name: 'Production POS', icon: '🏭',
+            tagline: 'For businesses that build what they sell — assemble finished goods from raw components, and hire equipment out.',
+            features: [
+                ['Recipes for finished goods', 'Define what a product is built from — components are only used the moment it actually sells.'],
+                ['Hire equipment out', 'Track what\u2019s out, to whom, and when it\u2019s due back — settled per client, not per item.'],
+                ['Add more to an existing hire', 'A returning client\u2019s new items join their existing hire record, not a new one each visit.'],
+                ['Client-grouped hires', 'See everything one client has out, their history, and share it to them directly on WhatsApp.'],
+                ['Cross-branch sales', 'Sell an item from another branch\u2019s stock right at your own counter.'],
+                ['M-Pesa built in', 'Send an STK push straight from checkout — no separate till number to manage.'],
+                ['Works with zero signal', 'A workshop floor with no signal still runs the till without interruption.'],
+            ],
+        },
+        pharmacy: {
+            name: 'Pharmacy POS', icon: '💊',
+            tagline: 'Batch-level expiry tracking and prescription records — built for how a real pharmacy actually needs to sell.',
+            features: [
+                ['Batch-level expiry', 'Track multiple batches of the same drug, each with its own expiry date.'],
+                ['Sells the soonest-expiring batch first', 'Automatic First-Expired-First-Out stock rotation at checkout — nothing goes to waste at the back of the shelf.'],
+                ['Prescription records', 'Capture prescriber and patient details at the point of sale for anything that requires one.'],
+                ['Controlled substance flagging', 'Mark an item as controlled, and every sale of it is logged separately.'],
+                ['M-Pesa built in', 'Send an STK push straight from checkout — no separate till number to manage.'],
+                ['Works with zero signal', 'A pharmacy till that keeps ringing up sales through a power cut.'],
+            ],
+        },
+        services: {
+            name: 'Services (Repairs, Salons & Bookings)', icon: '🔧',
+            tagline: 'For phone/electronics repair shops, salons and barbershops, garages, and laundromats \\u2014 any business that runs on jobs and appointments rather than shelf stock.',
+            features: [
+                ['Client Registry', 'Log every job the moment a client drops something off \\u2014 what was left, what\\u2019s being done, and when it\\u2019s due back.'],
+                ['Services Counter', 'Bill labour and parts together, with parts pulled straight from inventory and deducted automatically.'],
+                ['Bookings & staff scheduling', 'Take appointments and assign each one to the staff member handling it.'],
+                ['Walk-in sales, same till', 'Ring up counter sales and job payments from the same place \\u2014 no separate system to reconcile.'],
+                ['M-Pesa built in', 'Send an STK push straight from checkout \\u2014 no separate till number to manage.'],
+                ['Works with zero signal', 'Every sale is saved on the device first, and syncs the moment you\\u2019re back online.'],
+            ],
+        },
+        water: {
+            name: 'Water Refill Station (AquaPOS)', icon: '💧',
+            tagline: 'Built for water refill stations and bottling shops — dispensers, bales, and bulk/industrial tanks, all with pricing that matches how you actually sell.',
+            features: [
+                ['Dispensers, bales & bulk tanks', 'Sell by the dispenser, the bale, or the industrial tank — each with its own tiered pricing.'],
+                ['Delivery zones', 'Set delivery pricing by zone so a driver never has to guess a customer\\u2019s rate.'],
+                ['Refill & bulk order tracking', 'Track refill sizes and standing bulk orders separately from one-off counter sales.'],
+                ['Customer loyalty tokens', 'Reward repeat customers with tokens that carry real shilling value at checkout.'],
+                ['M-Pesa built in', 'Send an STK push straight from checkout — no separate till number to manage.'],
+                ['Works with zero signal', 'Every sale is saved on the device first, and syncs the moment you\\u2019re back online.'],
+            ],
+        },
+    };
+
+
+    const params = new URLSearchParams(window.location.search);
+    const productKey = PRODUCTS[params.get('product')] ? params.get('product') : 'shop';
+    const baseProduct = PRODUCTS[productKey];
+
+    document.title = `${baseProduct.name} — mydukapos`;
+    document.getElementById('p-icon').textContent = baseProduct.icon;
+    document.getElementById('p-name').textContent = baseProduct.name;
+
+    // Called once immediately with no override (so the page shows the
+    // built-in defaults right away, not blank while a fetch is in flight),
+    // then again once the owner's marketing content resolves. A product
+    // with no owner-uploaded screenshot yet shows a plain placeholder
+    // rather than falling back to some other product's screenshot — no
+    // uploaded image is a much less confusing state than the wrong one.
+    function renderProductPage(override) {
+        const tagline = (override && override.tagline) || baseProduct.tagline;
+        const features = (override && override.features && override.features.length > 0)
+            ? override.features.map(f => [f.title, f.desc])
+            : baseProduct.features;
+        // New multi-photo gallery, with a fallback to a legacy single
+        // screenshot for any content saved before the gallery existed —
+        // Owner Console itself migrates this on load, but this page
+        // shouldn't assume every visitor's cache has picked that up yet.
+        let screenshots = (override && Array.isArray(override.screenshots)) ? override.screenshots : [];
+        if (screenshots.length === 0 && override && override.screenshotDataUrl) {
+            screenshots = [{ dataUrl: override.screenshotDataUrl, caption: '' }];
+        }
+
+        document.getElementById('p-tagline').textContent = tagline;
+        renderShotGallery(screenshots);
+
+        document.getElementById('feature-list').innerHTML = features.map(([title, desc]) => `
+            <li><span class="mark">✓</span><span class="txt"><strong>${escapeHtml(title)}</strong><span>${escapeHtml(desc)}</span></span></li>
+        `).join('');
+    }
+
+    // Builds the swipeable gallery for 2+ photos (arrows, dots, scroll-snap
+    // track), a single plain image with no gallery chrome for exactly 1
+    // (nothing to click through), or the "coming soon" placeholder for 0.
+    function renderShotGallery(screenshots) {
+        const shotFrame = document.querySelector('.shot-frame');
+        const captionEl = document.getElementById('p-screenshot-caption');
+
+        if (screenshots.length === 0) {
+            shotFrame.innerHTML = `<div style="padding:60px 20px; text-align:center; color:var(--ink-mute-on-paper); font-size:14px;">📱 Screenshot coming soon</div>`;
+            captionEl.style.display = 'none';
+            return;
+        }
+
+        if (screenshots.length === 1) {
+            shotFrame.innerHTML = `<img id="p-screenshot" src="${screenshots[0].dataUrl}" alt="${escapeHtml(baseProduct.name)} screenshot">`;
+            if (screenshots[0].caption) {
+                captionEl.textContent = screenshots[0].caption;
+                captionEl.style.display = 'block';
+            } else {
+                captionEl.style.display = 'none';
+            }
+            return;
+        }
+
+        shotFrame.innerHTML = `
+            <div class="shot-gallery-track" id="shot-gallery-track">
+                ${screenshots.map((s, i) => `<img src="${s.dataUrl}" alt="${escapeHtml(baseProduct.name)} screenshot ${i + 1} of ${screenshots.length}">`).join('')}
+            </div>
+            <button type="button" class="shot-nav-btn shot-nav-prev" aria-label="Previous screenshot" onclick="shotGalleryStep(-1)">‹</button>
+            <button type="button" class="shot-nav-btn shot-nav-next" aria-label="Next screenshot" onclick="shotGalleryStep(1)">›</button>
+        `;
+        captionEl.style.display = 'none'; // per-photo captions render below the dots instead, since which photo is "current" changes as the visitor scrolls
+
+        const dotsHtml = screenshots.map((_, i) => `<button type="button" class="shot-dot${i === 0 ? ' active' : ''}" aria-label="Go to screenshot ${i + 1}" onclick="shotGalleryGoTo(${i})"></button>`).join('');
+        shotFrame.insertAdjacentHTML('afterend', `<div class="shot-dots" id="shot-gallery-dots">${dotsHtml}</div><p class="shot-caption" id="shot-gallery-caption" style="${screenshots[0].caption ? '' : 'display:none;'}">${escapeHtml(screenshots[0].caption || '')}</p>`);
+
+        const track = document.getElementById('shot-gallery-track');
+        track.addEventListener('scroll', () => updateShotGalleryActiveDot(screenshots), { passive: true });
+    }
+
+    function shotGalleryStep(direction) {
+        const track = document.getElementById('shot-gallery-track');
+        if (!track) return;
+        track.scrollBy({ left: track.clientWidth * direction, behavior: 'smooth' });
+    }
+
+    function shotGalleryGoTo(index) {
+        const track = document.getElementById('shot-gallery-track');
+        if (!track) return;
+        track.scrollTo({ left: track.clientWidth * index, behavior: 'smooth' });
+    }
+
+    // Debounced via rAF — the scroll event fires continuously mid-swipe, and
+    // only the settled position (once scrolling has actually stopped near a
+    // snap point) should update which dot/caption is shown as "current."
+    let shotGalleryDotRaf = null;
+    function updateShotGalleryActiveDot(screenshots) {
+        if (shotGalleryDotRaf) cancelAnimationFrame(shotGalleryDotRaf);
+        shotGalleryDotRaf = requestAnimationFrame(() => {
+            const track = document.getElementById('shot-gallery-track');
+            const dotsEl = document.getElementById('shot-gallery-dots');
+            const captionEl = document.getElementById('shot-gallery-caption');
+            if (!track || !dotsEl) return;
+            const index = Math.round(track.scrollLeft / track.clientWidth);
+            [...dotsEl.children].forEach((dot, i) => dot.classList.toggle('active', i === index));
+            if (captionEl && screenshots[index]) {
+                const caption = screenshots[index].caption || '';
+                captionEl.textContent = caption;
+                captionEl.style.display = caption ? 'block' : 'none';
+            }
+        });
+    }
+
+    renderProductPage();
+    document.getElementById('foot-year').textContent = new Date().getFullYear();
+
+    function renderSwitcher(visibleKeys) {
+        // The product being viewed right now always shows in its own
+        // switcher, even if it's been hidden from discovery — otherwise the
+        // active tab would vanish from its own navigation, which would look
+        // broken rather than intentional.
+        const keys = Object.keys(PRODUCTS).filter(key => visibleKeys.includes(key) || key === productKey);
+        document.getElementById('switcher-links').innerHTML = keys.map(key => `
+            <a href="app.html?product=${key}" class="${key === productKey ? 'active' : ''}">${PRODUCTS[key].icon} ${PRODUCTS[key].name}</a>
+        `).join('');
+    }
+    renderSwitcher(Object.keys(PRODUCTS));
+
+    let lastGeneratedLink = '';
+
+    async function generateDemo() {
+        const errEl = document.getElementById('demo-error');
+        const btn = document.getElementById('demo-generate-btn');
+        const fullName = document.getElementById('demo-full-name').value.trim();
+        const phone = document.getElementById('demo-phone').value.trim();
+        const email = document.getElementById('demo-email').value.trim();
+        const businessName = document.getElementById('demo-business-name').value.trim();
+        const password = document.getElementById('demo-password').value;
+        const confirmPassword = document.getElementById('demo-password-confirm').value;
+
+        errEl.textContent = '';
+        if (!fullName || !phone || !email || !businessName || !password) {
+            errEl.textContent = 'Please fill in every field to continue.';
+            return;
+        }
+        if (password !== confirmPassword) {
+            errEl.textContent = 'Passwords do not match.';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Creating your account…';
+
+        try {
+            const res = await fetch('/api/demo-account', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'register', fullName, phone, email, password, confirmPassword,
+                    product: productKey, businessName,
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                errEl.textContent = data.error || 'Could not generate a demo right now — please try again.';
+                btn.disabled = false;
+                btn.textContent = 'Create account & generate my free demo';
+                return;
+            }
+
+            if (data.token) localStorage.setItem('mydukapos_demo_token', data.token);
+
+            if (!data.link) {
+                // Account already existed for this email under a different flow,
+                // or product/businessName was missing — send them to sign in.
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            lastGeneratedLink = data.link;
+            document.getElementById('demo-link-output').value = data.link;
+            document.getElementById('demo-open-link').href = data.link;
+            document.getElementById('demo-result').classList.add('show');
+            btn.textContent = 'Demo ready — view your dashboard →';
+            btn.onclick = () => { window.location.href = 'dashboard.html'; };
+            btn.disabled = false;
+        } catch (e) {
+            errEl.textContent = 'Could not reach the server — check your connection and try again.';
+            btn.disabled = false;
+            btn.textContent = 'Create account & generate my free demo';
+        }
+    }
+
+    function copyDemoLink() {
+        const input = document.getElementById('demo-link-output');
+        input.select();
+        navigator.clipboard?.writeText(lastGeneratedLink).catch(() => {
+            document.execCommand('copy');
+        });
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str == null ? '' : String(str);
+        return div.innerHTML;
+    }
+
+    async function loadWebsiteContent() {
+        try {
+            const res = await fetch('/api/website-content', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get' }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.content) return;
+            const el = document.getElementById('price-amount');
+            if (el) el.textContent = Number(data.content.price).toLocaleString('en-KE');
+            renderSwitcher(data.content.visibleProducts || Object.keys(PRODUCTS));
+
+            const durationEl = document.getElementById('demo-duration-hint');
+            if (durationEl) {
+                const demoHours = Number(data.content.demoDurationHours) || 72;
+                if (demoHours >= 24 && demoHours % 24 === 0) {
+                    const days = demoHours / 24;
+                    durationEl.textContent = `${days} day${days === 1 ? '' : 's'}`;
+                } else {
+                    durationEl.textContent = `${demoHours} hour${demoHours === 1 ? '' : 's'}`;
+                }
+            }
+
+            const altMethods = data.content.alternatePaymentMethods || [];
+            const altEl = document.getElementById('alt-payment-methods');
+            if (altEl && altMethods.length > 0) {
+                altEl.innerHTML = `
+                    <details style="margin-top:14px; font-size:12.5px; color:rgba(247,243,232,0.6);">
+                        <summary style="cursor:pointer; font-weight:600;">Other ways to pay</summary>
+                        <div style="margin-top:8px;">
+                            ${altMethods.map(m => `
+                                <div style="margin-bottom:10px;">
+                                    <div style="font-weight:600; color:rgba(247,243,232,0.85);">${escapeHtml(m.label)}</div>
+                                    ${m.type === 'photo'
+                                        ? `<img src="${m.photoDataUrl}" style="max-width:180px; margin-top:4px; border-radius:4px;">`
+                                        : `<div>${escapeHtml(m.details || '')}</div>`}
+                                </div>`).join('')}
+                        </div>
+                    </details>`;
+            }
+        } catch (e) {
+            // Silent — the page already shows sensible defaults in the HTML
+            // itself, so a failed fetch just leaves those visible.
+        }
+    }
+
+    async function loadWebsiteMarketingContent() {
+        try {
+            const res = await fetch('/api/website-marketing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get' }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.content) return;
+
+            if (data.content.logoDataUrl) {
+                const wordmark = document.getElementById('site-wordmark');
+                // Adds the logo alongside the "mydukapos" text rather than
+                // replacing it — this wordmark isn't a flex row here, so
+                // vertical-align keeps the image reasonably lined up with
+                // the text baseline instead of flexbox handling it.
+                if (wordmark && !document.getElementById('site-wordmark-logo')) {
+                    const img = document.createElement('img');
+                    img.id = 'site-wordmark-logo';
+                    img.src = data.content.logoDataUrl;
+                    img.alt = 'Logo';
+                    img.style.cssText = 'height:44px; width:auto; display:inline-block; vertical-align:middle; margin-right:8px;';
+                    wordmark.prepend(img);
+                }
+            }
+
+            const override = data.content.products && data.content.products[productKey];
+            if (override) renderProductPage(override);
+        } catch (e) {
+            // Silent — same reasoning as loadWebsiteContent above.
+        }
+    }
+
+    loadWebsiteContent();
+    loadWebsiteMarketingContent();
+
+    // Scroll-reveal — same system and same safety net as index.html (see
+    // its comments for the full reasoning): content must never end up
+    // permanently invisible if anything here fails.
+    function revealAllNow() {
+        document.querySelectorAll('.reveal, .reveal-stagger').forEach((el) => el.classList.add('in-view'));
+    }
+    if (!('IntersectionObserver' in window)) {
+        revealAllNow();
+    } else {
+        try {
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('in-view');
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+            document.querySelectorAll('.reveal, .reveal-stagger').forEach((el) => revealObserver.observe(el));
+        } catch (e) {
+            revealAllNow();
+        }
+    }
+    setTimeout(revealAllNow, 4000);
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+name = "mydukapos"
+compatibility_date = "2024-09-01"
+pages_build_output_dir = "."
+
+# SUBDOMAIN LINKS: client links are now issued as subdomains of your own
+# domain (e.g. https://georgehardware.mydukapos.store/) instead of a bare
+# ?c=<token> query param. Two things are needed for this to work:
+#
+#   1. In the Cloudflare dashboard, add a custom domain of *.mydukapos.store
+#      (Pages project -> Settings -> Domains) so every subdomain routes to
+#      this same deployment. If mydukapos.store's DNS is on Cloudflare,
+#      adding the custom domain creates the wildcard DNS record for you.
+#   2. If your domain isn't "mydukapos.store", set it below (or as a Pages
+#      project env var of the same name) so the server knows what to strip
+#      off a Host header to find the subdomain:
+#
+# [vars]
+# ROOT_DOMAIN = "mydukapos.store"
+#
+# The Owner Console itself intentionally stays on the apex domain (no
+# subdomain) and keeps using ?c=<token> — see functions/api/_license.js.
+
+# This project no longer uses a MASTER_ADMIN_PASSWORD environment variable or
+# a separate master.html admin dashboard. The one owner login (email/phone +
+# password) is created through the app itself, the first time you open the
+# deployed site's root URL — see README-MASTER.md.
+
+# Bind a KV namespace named mydukapos_kv to this project so the Pages Functions in
+# /functions/api can read and write shared POS state and M-Pesa transaction
+# records. Create the namespace first, then paste its id below:
+#
+#   npx wrangler kv namespace create mydukapos_kv
+#
+# This prints an `id` — put it here. If you deploy via the Cloudflare dashboard
+# (Git integration) instead of this CLI config, add the same binding under
+# Pages project -> Settings -> Functions -> KV namespace bindings, with
+# variable name "mydukapos_kv", instead of editing this file.
+[[kv_namespaces]]
+binding = "mydukapos_kv"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# Preview deployments (e.g. pull request previews) can use the same namespace,
+# or create a second one and set its id here to keep preview data separate.
+# [env.preview]
+# kv_namespaces = [
+#   { binding = "mydukapos_kv", id = "REPLACE_WITH_YOUR_PREVIEW_KV_NAMESPACE_ID" }
+# ]
+
+# CROSS-DEVICE LIVE PUSH: binds to the SyncRoom Durable Object class, which
+# is defined in the separate wildcard-router Worker (Pages Functions can
+# bind to a Durable Object class but can't define one itself — see the
+# comment at the bottom of wildcard-router/worker.js). Deploy that Worker
+# FIRST (`wrangler deploy` from wildcard-router/, which also runs its own
+# migration to register the class), THEN redeploy this Pages project so the
+# binding below resolves. If this binding is missing, unresolvable, or the
+# script it points to hasn't been deployed yet, functions/api/pos-sync.js
+# and functions/api/sync-ws.js both fail that part silently and every
+# device just keeps relying on its normal 7-second poll — nothing else
+# breaks.
+[[durable_objects.bindings]]
+name = "SYNC_ROOM"
+class_name = "SyncRoom"
+script_name = "mydukapos-wildcard-router"

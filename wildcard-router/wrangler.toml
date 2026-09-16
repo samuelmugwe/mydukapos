@@ -1,0 +1,27 @@
+name = "mydukapos-wildcard-router"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+# This is what actually makes *.mydukapos.store work — Cloudflare Pages has
+# no equivalent setting, which is why this Worker exists at all (see the
+# comment at the top of worker.js). zone_name must match a domain that's
+# already an active zone in this Cloudflare account (see the deploy guide).
+[[routes]]
+pattern = "*.mydukapos.store/*"
+zone_name = "mydukapos.store"
+
+# Registers the SyncRoom Durable Object class (see the bottom of worker.js)
+# with THIS Worker — migrations belong in the wrangler.toml of whichever
+# script actually defines the class, never in the consumer's (the mydukapos
+# Pages project binds to it cross-script; see its own wrangler.toml). Run
+# `wrangler deploy` from this directory after adding this so Cloudflare
+# provisions the class before anything tries to bind to it.
+#
+# new_sqlite_classes (not the older new_classes) because Cloudflare no
+# longer allows creating key-value-backed Durable Object namespaces on
+# newer accounts — SQLite-backed is now the only option, and works exactly
+# the same for SyncRoom's purposes here (it holds no durable storage of its
+# own either way; see the class's own comment in worker.js).
+[[migrations]]
+tag = "v1-sync-room"
+new_sqlite_classes = ["SyncRoom"]

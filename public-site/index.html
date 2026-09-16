@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mydukapos — Point of Sale software for Kenyan business, KES 3,000 once</title>
+<meta name="description" content="Offline-capable point of sale for shops, hotels, restaurants, bars, hospitals, schools, water refill stations, and production businesses. One payment, KES 3,000, yours for good. Try a free 72-hour demo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --ink: #1B2E28;
+        --ink-2: #223B33;
+        --paper: #F7F3E8;
+        --paper-2: #FFFDF8;
+        --signal: #E8A33D;
+        --leaf: #4C9A6A;
+        --rust: #C1502E;
+        --ink-mute: #8FA69B;
+        --ink-mute-on-paper: #5B6B60;
+        --display: 'Space Grotesk', sans-serif;
+        --body: 'IBM Plex Sans', sans-serif;
+        --mono: 'IBM Plex Mono', monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--body);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+    h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+    .eyebrow {
+        font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase;
+        color: var(--leaf); font-weight: 600; margin: 0 0 10px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+    }
+
+    /* ---------- MOTION SYSTEM ---------- */
+    /* Scroll-reveal: elements start faded/offset, then animate in once the
+       .in-view class is added by an IntersectionObserver (see bottom of
+       page). Deliberately a short 500ms — https://web.dev-style guidance is
+       to keep entrance animations brief so they read as "content settling
+       in," not as something the visitor has to wait through. */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .reveal.in-view { opacity: 1; transform: translateY(0); }
+    .reveal-stagger > * { opacity: 0; }
+    .reveal-stagger.in-view > * { animation: reveal-stagger-in 0.5s ease both; }
+    .reveal-stagger.in-view > *:nth-child(1) { animation-delay: 0.03s; }
+    .reveal-stagger.in-view > *:nth-child(2) { animation-delay: 0.09s; }
+    .reveal-stagger.in-view > *:nth-child(3) { animation-delay: 0.15s; }
+    .reveal-stagger.in-view > *:nth-child(4) { animation-delay: 0.21s; }
+    .reveal-stagger.in-view > *:nth-child(5) { animation-delay: 0.27s; }
+    .reveal-stagger.in-view > *:nth-child(6) { animation-delay: 0.33s; }
+    @keyframes reveal-stagger-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* A small live/active indicator — pulsing ring behind a solid dot, used
+       anywhere something should read as "currently on," not just a static
+       badge (e.g. the trust badge, demo CTA). */
+    .pulse-dot { position: relative; display: inline-flex; width: 8px; height: 8px; border-radius: 50%; background: var(--leaf); flex-shrink: 0; }
+    .pulse-dot::after {
+        content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--leaf);
+        animation: pulse-ring 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse-ring { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.8); opacity: 0; } }
+
+    /* Subtle glow behind the primary CTA — same signal color as the button
+       itself, blurred and low-opacity, so it reads as "this button matters"
+       without becoming a distraction. */
+    .glow-cta { position: relative; }
+    .glow-cta::before {
+        content: ''; position: absolute; inset: -6px; border-radius: 8px;
+        background: var(--signal); opacity: 0.35; filter: blur(14px); z-index: -1;
+        transition: opacity 0.25s ease, filter 0.25s ease;
+    }
+    .glow-cta:hover::before { opacity: 0.55; filter: blur(18px); }
+
+    /* ---------- NAV ---------- */
+    header.site-nav {
+        position: sticky; top: 0; z-index: 50;
+        background: rgba(27, 46, 40, 0.82); backdrop-filter: blur(14px) saturate(1.4);
+        -webkit-backdrop-filter: blur(14px) saturate(1.4);
+        border-bottom: 1px solid rgba(247, 243, 232, 0.1);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; }
+    .wordmark { font-family: var(--display); font-weight: 700; font-size: 20px; color: var(--paper); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .wordmark .dot { color: var(--signal); }
+    .nav-links { display: flex; align-items: center; gap: 28px; }
+    .nav-links a { color: var(--paper); text-decoration: none; font-size: 14.5px; font-weight: 500; opacity: 0.85; }
+    .nav-links a:hover { opacity: 1; }
+    .nav-cta {
+        background: var(--signal); color: var(--ink); padding: 9px 18px; border-radius: 3px;
+        font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap;
+    }
+    .nav-mobile-hide { display: flex; }
+    @media (max-width: 720px) { .nav-mobile-hide { display: none; } }
+    .nav-signin-mobile { display: none; color: var(--paper); text-decoration: none; font-size: 13.5px; font-weight: 500; opacity: 0.85; margin-right: 14px; }
+    @media (max-width: 720px) { .nav-signin-mobile { display: inline-block; } }
+
+    /* ---------- HERO ---------- */
+    .hero {
+        background: var(--ink); color: var(--paper);
+        padding: 64px 0 96px;
+        position: relative; overflow: hidden;
+    }
+    .hero::before {
+        content: ''; position: absolute; inset: 0;
+        background-image: radial-gradient(circle at 12% 15%, rgba(232,163,61,0.22), transparent 42%),
+                           radial-gradient(circle at 88% 80%, rgba(76,154,106,0.20), transparent 45%),
+                           radial-gradient(circle at 90% 10%, rgba(193,80,46,0.14), transparent 38%);
+        pointer-events: none;
+    }
+    .hero::after {
+        content: ''; position: absolute; inset: 0;
+        background-image: repeating-linear-gradient(115deg, rgba(247,243,232,0.025) 0px, rgba(247,243,232,0.025) 1px, transparent 1px, transparent 44px);
+        pointer-events: none;
+    }
+    .trust-badge {
+        display: inline-flex; align-items: center; gap: 8px; background: rgba(247,243,232,0.1);
+        backdrop-filter: blur(10px) saturate(1.3); -webkit-backdrop-filter: blur(10px) saturate(1.3);
+        border: 1px solid rgba(247,243,232,0.22); border-radius: 30px; padding: 7px 16px 7px 8px;
+        font-size: 13px; font-weight: 600; color: var(--paper); margin-bottom: 22px; position: relative;
+    }
+    .trust-badge .flag { font-size: 16px; }
+    .hero-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; align-items: center; position: relative; }
+    @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; } }
+    .hero h1 { font-size: clamp(36px, 5.2vw, 60px); line-height: 1.03; }
+    .hero h1 .accent { color: var(--signal); }
+    .hero-sub { font-size: 17px; color: rgba(247,243,232,0.78); max-width: 46ch; margin: 20px 0 30px; }
+    .hero-ctas { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-family: var(--body); font-weight: 600; font-size: 15px;
+        padding: 13px 24px; border-radius: 3px; text-decoration: none; border: 1.5px solid transparent;
+        cursor: pointer; transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+    .btn:hover { transform: translateY(-1px) scale(1.02); }
+    .btn:active { transform: translateY(0) scale(0.97); transition-duration: 0.1s; }
+    .btn-primary { background: var(--signal); color: var(--ink); }
+    .btn-primary:hover { box-shadow: 0 6px 18px rgba(232,163,61,0.35); }
+    .btn-ghost { border-color: rgba(247,243,232,0.35); color: var(--paper); }
+    .btn-ghost:hover { border-color: var(--paper); }
+    .hero-proof { margin-top: 34px; display: flex; gap: 26px; flex-wrap: wrap; font-size: 13.5px; color: rgba(247,243,232,0.65); }
+    .hero-proof span { font-family: var(--mono); color: var(--paper); font-weight: 600; }
+
+    /* ---------- RECEIPT SIGNATURE ELEMENT ---------- */
+    .receipt-wrap { display: flex; justify-content: center; }
+    .receipt {
+        width: min(320px, 100%); background: var(--paper-2); color: var(--ink);
+        font-family: var(--mono); font-size: 13.5px; padding: 26px 22px 30px;
+        box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,0,0,0.03);
+        position: relative; transform: rotate(1.2deg);
+    }
+    .receipt::after {
+        content: ''; position: absolute; left: 0; right: 0; bottom: -9px; height: 18px;
+        background:
+            radial-gradient(circle at 9px 0, transparent 9px, var(--paper-2) 9.5px) 0 -9px / 18px 18px repeat-x;
+    }
+    .receipt-head { text-align: center; margin-bottom: 14px; }
+    .receipt-head .biz { font-family: var(--display); font-weight: 700; font-size: 16px; letter-spacing: 0.02em; }
+    .receipt-head .loc { color: var(--ink-mute-on-paper); font-size: 11.5px; margin-top: 2px; }
+    .receipt-rule { border: none; border-top: 1px dashed #C9C2AE; margin: 10px 0; }
+    .receipt-line { display: flex; justify-content: space-between; gap: 10px; opacity: 0; animation: lineIn 0.35s ease forwards; }
+    .receipt-line.total { font-weight: 700; font-size: 14.5px; margin-top: 4px; }
+    .receipt-line .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    @keyframes lineIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .receipt-line:nth-child(1) { animation-delay: 0.3s; }
+    .receipt-line:nth-child(2) { animation-delay: 0.55s; }
+    .receipt-line:nth-child(3) { animation-delay: 0.8s; }
+    .receipt-line:nth-child(4) { animation-delay: 1.05s; }
+    .receipt-total-block .receipt-line:nth-child(1) { animation-delay: 1.5s; }
+    .receipt-total-block .receipt-line:nth-child(2) { animation-delay: 1.75s; }
+    .receipt-total-block .receipt-line:nth-child(3) { animation-delay: 2.0s; }
+    .receipt-thanks { text-align: center; margin-top: 16px; font-size: 11.5px; letter-spacing: 0.08em; color: var(--ink-mute-on-paper); opacity: 0; animation: lineIn 0.35s ease forwards; animation-delay: 2.3s; }
+    .receipt-stamp {
+        position: absolute; bottom: -14px; right: -18px; font-family: var(--display); font-weight: 700;
+        font-size: 22px; color: var(--leaf); border: 3px solid var(--leaf); border-radius: 6px;
+        padding: 2px 12px; background: var(--paper-2); transform: rotate(-14deg) scale(0.7); opacity: 0;
+        animation: stampIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 2.55s;
+    }
+    @keyframes stampIn { from { opacity: 0; transform: rotate(-14deg) scale(0.4); } to { opacity: 0.88; transform: rotate(-14deg) scale(1); } }
+    @media (max-width: 480px) {
+        .receipt-stamp { font-size: 18px; bottom: -12px; right: -10px; padding: 1px 9px; }
+    }
+
+    /* ---------- SECTIONS ---------- */
+    section { padding: 84px 0; }
+    .section-head { max-width: 640px; margin: 0 auto 48px; text-align: center; }
+    .section-head h2 { font-size: clamp(26px, 3.2vw, 36px); }
+    .section-head p { color: var(--ink-mute-on-paper); font-size: 16px; margin-top: 14px; }
+
+    /* ---------- APP GRID (receipt-stub cards) ---------- */
+    .app-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
+    }
+    @media (max-width: 900px) { .app-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; } }
+    @media (max-width: 480px) { .app-grid { gap: 12px; } }
+    .app-card {
+        background: var(--paper-2); text-decoration: none; color: var(--ink);
+        border: 1px solid rgba(27,46,40,0.1); border-top: 4px solid var(--card-accent, var(--signal)); border-radius: 8px;
+        padding: 24px 20px 20px; position: relative; overflow: hidden;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        display: flex; flex-direction: column; min-height: 190px;
+    }
+    .app-card:hover { transform: translateY(-4px) scale(1.015); box-shadow: 0 16px 30px -14px rgba(27,46,40,0.28); }
+    .app-card .icon {
+        width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 24px; margin-bottom: 12px;
+    }
+    .app-card .name { font-family: var(--display); font-weight: 700; font-size: 16px; margin-bottom: 6px; }
+    .app-card .desc { font-size: 13px; color: var(--ink-mute-on-paper); flex: 1; }
+    .app-card .go {
+        margin-top: 14px; font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.06em;
+        color: var(--leaf); font-weight: 600; display: flex; align-items: center; gap: 6px;
+    }
+    @media (max-width: 480px) {
+        .app-card { padding: 16px 14px 14px; min-height: 158px; }
+        .app-card .icon { width: 42px; height: 42px; font-size: 20px; margin-bottom: 8px; }
+        .app-card .name { font-size: 14px; }
+        .app-card .desc { font-size: 12px; }
+    }
+
+    /* ---------- BRAG STRIP ---------- */
+    .brag { background: var(--ink); color: var(--paper); position: relative; overflow: hidden; }
+    .brag::before {
+        content: ''; position: absolute; inset: 0;
+        background-image: radial-gradient(circle at 85% 20%, rgba(76,154,106,0.18), transparent 42%),
+                           radial-gradient(circle at 10% 85%, rgba(232,163,61,0.16), transparent 45%);
+        pointer-events: none;
+    }
+    .brag > .wrap { position: relative; }
+    .brag-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; }
+    @media (max-width: 900px) { .brag-grid { grid-template-columns: repeat(2, 1fr); } }
+    .brag-item .num { font-family: var(--mono); font-size: 30px; font-weight: 600; color: var(--signal); }
+    .brag-item .label { font-size: 13.5px; color: rgba(247,243,232,0.7); margin-top: 6px; }
+    .sync-pair { display: flex; align-items: center; justify-content: center; gap: 28px; margin-bottom: 52px; }
+    @media (max-width: 480px) { .sync-pair { flex-direction: column; gap: 12px; } }
+    .sync-item { text-align: center; }
+    .sync-icon {
+        width: 84px; height: 84px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 36px; margin: 0 auto 12px; border: 2px solid rgba(247,243,232,0.15);
+    }
+    .sync-item .sync-label { font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--paper); }
+    .sync-item .sync-sub { font-size: 12px; color: rgba(247,243,232,0.55); margin-top: 2px; }
+    .sync-plus { font-family: var(--display); font-size: 26px; font-weight: 700; color: var(--signal); }
+
+    /* ---------- FEATURES ---------- */
+    .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    @media (max-width: 860px) { .feat-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .feat-grid { grid-template-columns: 1fr; } }
+    .feat {
+        background: var(--paper-2); border: 1px solid rgba(27,46,40,0.08); border-radius: 8px; padding: 24px 22px;
+        text-align: center; transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .feat:hover { transform: translateY(-3px) scale(1.015); box-shadow: 0 14px 26px -16px rgba(27,46,40,0.3); }
+    .feat-icon {
+        width: 62px; height: 62px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 28px; margin: 0 auto 14px;
+    }
+    .feat .tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--rust); font-weight: 600; text-transform: uppercase; }
+    .feat h3 { font-size: 16.5px; margin: 8px 0 8px; }
+    .feat p { font-size: 13.5px; color: var(--ink-mute-on-paper); margin: 0; line-height: 1.5; }
+
+    /* ---------- IN-ACTION SHOWCASE ---------- */
+    .showcase { padding: 0 0 8px; }
+    .showcase-inner {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: center;
+    }
+    .showcase.reverse .showcase-inner { direction: rtl; }
+    .showcase.reverse .showcase-inner > * { direction: ltr; }
+    @media (max-width: 860px) { .showcase-inner { grid-template-columns: 1fr; gap: 24px; } }
+    .showcase-img {
+        border-radius: 12px; overflow: hidden; box-shadow: 0 24px 50px -24px rgba(27,46,40,0.35);
+        border: 1px solid rgba(27,46,40,0.08);
+    }
+    .showcase-img img { display: block; width: 100%; height: auto; transition: transform 0.3s ease; }
+    .showcase-img:hover img { transform: scale(1.035); }
+    .showcase-text .eyebrow { margin-bottom: 10px; }
+    .showcase-text h2 { margin-bottom: 14px; }
+    .showcase-text p { color: var(--ink-mute-on-paper); font-size: 15.5px; margin-bottom: 20px; }
+
+    /* ---------- TESTIMONIALS ---------- */
+    .testi-section { background: var(--ink-2); color: var(--paper); position: relative; overflow: hidden; }
+    .testi-section::before {
+        content: ''; position: absolute; inset: 0;
+        background-image: radial-gradient(circle at 15% 10%, rgba(193,80,46,0.14), transparent 40%),
+                           radial-gradient(circle at 90% 90%, rgba(232,163,61,0.14), transparent 45%);
+        pointer-events: none;
+    }
+    .testi-section > .wrap { position: relative; }
+    .testi-section .section-head p { color: rgba(247,243,232,0.7); }
+    .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    @media (max-width: 900px) { .testi-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .testi-grid { grid-template-columns: 1fr; } }
+    .testi-card {
+        background: rgba(247,243,232,0.07); border: 1px solid rgba(247,243,232,0.14);
+        border-left: 3px solid var(--signal);
+        border-radius: 8px; padding: 24px; display: flex; flex-direction: column; position: relative;
+        transition: transform 0.22s ease, background 0.22s ease;
+    }
+    .testi-card:hover { transform: translateY(-3px) scale(1.015); background: rgba(247,243,232,0.1); }
+
+    .testi-quote-mark {
+        position: absolute; top: 10px; right: 18px; font-family: var(--display); font-size: 56px;
+        font-weight: 700; color: rgba(232,163,61,0.18); line-height: 1; pointer-events: none;
+    }
+    .testi-stars { color: var(--signal); font-size: 14px; letter-spacing: 2px; margin-bottom: 12px; }
+    .testi-quote { font-size: 14.5px; line-height: 1.6; flex: 1; margin: 0 0 16px; position: relative; }
+    .testi-quote::before { content: '\201C'; }
+    .testi-quote::after { content: '\201D'; }
+    .testi-who { display: flex; align-items: center; gap: 10px; border-top: 1px dashed rgba(247,243,232,0.2); padding-top: 14px; }
+    .testi-avatar {
+        width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center;
+        justify-content: center; font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--ink);
+    }
+    .testi-who-text { font-family: var(--mono); font-size: 12.5px; color: rgba(247,243,232,0.6); }
+    .testi-who-text strong { color: var(--paper); font-family: var(--body); font-weight: 600; display: block; font-size: 13.5px; margin-bottom: 1px; }
+
+    /* ---------- PRICING ---------- */
+
+    .pricing-card {
+        max-width: 560px; margin: 0 auto; background: var(--paper-2);
+        border: 2px solid var(--ink); border-radius: 8px; padding: 44px 40px; text-align: center;
+        position: relative;
+        box-shadow: 0 30px 60px -30px rgba(27,46,40,0.35);
+    }
+    .pricing-badge {
+        position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+        background: var(--signal); color: var(--ink); font-family: var(--mono); font-size: 11.5px;
+        font-weight: 700; letter-spacing: 0.08em; padding: 5px 14px; border-radius: 3px; text-transform: uppercase;
+    }
+    .pricing-ribbon-clip {
+        position: absolute; top: 0; right: 0; width: 110px; height: 110px; overflow: hidden;
+        border-radius: 0 6px 0 0; pointer-events: none;
+    }
+    .pricing-ribbon {
+        position: absolute; top: 22px; right: -46px; width: 170px; text-align: center;
+        background: var(--rust); color: var(--paper); font-family: var(--mono); font-size: 11px;
+        font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 0;
+        transform: rotate(45deg); box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    }
+    .price-num { font-family: var(--display); font-weight: 700; font-size: 56px; margin: 18px 0 4px; }
+    .price-num .cur { font-size: 22px; vertical-align: super; color: var(--ink-mute-on-paper); }
+    .price-sub { font-family: var(--mono); font-size: 13px; color: var(--leaf); font-weight: 600; letter-spacing: 0.04em; }
+    .price-list { list-style: none; padding: 0; margin: 28px 0; text-align: left; display: inline-block; }
+    .price-list li { padding: 7px 0; font-size: 14.5px; display: flex; gap: 10px; align-items: flex-start; }
+    .price-list li::before { content: '✓'; color: var(--leaf); font-weight: 700; flex-shrink: 0; }
+    .price-note { font-size: 12.5px; color: var(--ink-mute-on-paper); margin-top: 18px; }
+
+    /* ---------- FINAL CTA ---------- */
+    .final-cta { background: var(--ink); color: var(--paper); text-align: center; position: relative; overflow: hidden; }
+    .final-cta::before {
+        content: ''; position: absolute; inset: 0;
+        background-image: radial-gradient(circle at 50% 0%, rgba(232,163,61,0.16), transparent 55%),
+                           radial-gradient(circle at 15% 100%, rgba(76,154,106,0.14), transparent 45%);
+        pointer-events: none;
+    }
+    .final-cta > .wrap { position: relative; }
+    .final-cta h2 { font-size: clamp(26px, 3.6vw, 38px); max-width: 620px; margin: 0 auto 16px; }
+    .final-cta p { color: rgba(247,243,232,0.7); max-width: 480px; margin: 0 auto 30px; }
+
+    /* ---------- FOOTER ---------- */
+    footer { background: var(--ink); color: rgba(247,243,232,0.5); border-top: 1px solid rgba(247,243,232,0.1); padding: 32px 0; }
+    .foot-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 13px; }
+
+    .whatsapp-float {
+        position: fixed;
+        bottom: 22px;
+        right: 22px;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: #25D366;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.28);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .whatsapp-float:hover { transform: scale(1.07); box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
+    .whatsapp-float svg { width: 30px; height: 30px; }
+    @media (max-width: 480px) {
+        .whatsapp-float { width: 52px; height: 52px; bottom: 16px; right: 16px; }
+        .whatsapp-float svg { width: 27px; height: 27px; }
+    }
+</style>
+</head>
+<body>
+
+<header class="site-nav">
+    <div class="wrap nav-inner">
+        <a href="/" class="wordmark" id="site-wordmark">myduka<span class="dot">pos</span></a>
+        <nav class="nav-links nav-mobile-hide">
+            <a href="#apps">Products</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#testimonials">Reviews</a>
+            <a href="dashboard.html">Sign in</a>
+        </nav>
+        <a href="dashboard.html" class="nav-signin-mobile">Sign in</a>
+        <a href="#apps" class="nav-cta">Try a free demo</a>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="wrap hero-grid">
+        <div>
+            <div class="trust-badge"><span class="pulse-dot"></span> <span class="flag">🇰🇪</span> Trusted by Kenyan merchants</div>
+            <p class="eyebrow">Point of sale, built for Kenya</p>
+            <h1 id="hero-headline">The till that keeps working <span class="accent">even when the internet doesn't.</span></h1>
+            <p class="hero-sub" id="hero-subhead">One app for your shop, hotel, restaurant, bar, hospital, school, water refill station, or workshop. Every sale recorded, every receipt printed, every shilling accounted for — online or off.</p>
+            <div class="hero-ctas">
+                <a href="#apps" class="btn btn-primary glow-cta">Try a free <span id="demo-duration-hero-cta">72-hour</span> demo</a>
+                <a href="#pricing" class="btn btn-ghost">See pricing — KES <span id="price-amount-hero">3,000</span></a>
+            </div>
+            <div class="hero-proof">
+                <div><span>6</span> business types covered</div>
+                <div><span>0</span> monthly fees, ever</div>
+                <div><span id="demo-duration-proof">72hr</span> free demo, no card needed</div>
+            </div>
+        </div>
+        <div class="receipt-wrap">
+            <div class="receipt" aria-hidden="true">
+                <div class="receipt-head">
+                    <div class="biz">MAMA NJERI DUKA</div>
+                    <div class="loc">Kawangware, Nairobi</div>
+                </div>
+                <hr class="receipt-rule">
+                <div class="receipt-line"><span class="name">Unga 2kg</span><span>KES 210</span></div>
+                <div class="receipt-line"><span class="name">Sukuma wiki</span><span>KES 20</span></div>
+                <div class="receipt-line"><span class="name">Maziwa 500ml</span><span>KES 60</span></div>
+                <div class="receipt-line"><span class="name">Mchele 1kg</span><span>KES 180</span></div>
+                <hr class="receipt-rule">
+                <div class="receipt-total-block">
+                    <div class="receipt-line total"><span class="name">TOTAL</span><span>KES 470</span></div>
+                    <div class="receipt-line"><span class="name">Cash tendered</span><span>KES 500</span></div>
+                    <div class="receipt-line"><span class="name">Change</span><span>KES 30</span></div>
+                </div>
+                <div class="receipt-thanks">*** ASANTE SANA — KARIBU TENA ***</div>
+                <div class="receipt-stamp">PAID</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="apps">
+    <div class="wrap">
+        <div class="section-head reveal">
+            <p class="eyebrow">Six businesses, one system</p>
+            <h2>Pick what you run</h2>
+            <p>Every product shares the same reliable core — offline sales, M-Pesa, receipts, staff accounts — built out for exactly how your business actually works.</p>
+        </div>
+        <div class="app-grid reveal" id="app-grid"></div>
+    </div>
+</section>
+
+<section class="brag">
+    <div class="wrap">
+        <div class="section-head reveal" style="margin-bottom:32px;">
+            <p class="eyebrow" style="color:var(--signal);">Why mydukapos</p>
+            <h2 style="color:var(--paper);">Built for how Kenyan business actually runs</h2>
+        </div>
+        <div class="sync-pair">
+            <div class="sync-item">
+                <div class="sync-icon" style="background:rgba(76,154,106,0.15);">📥</div>
+                <div class="sync-label">Offline Mode</div>
+                <div class="sync-sub">Every sale saved on the device instantly</div>
+            </div>
+            <div class="sync-plus">+</div>
+            <div class="sync-item">
+                <div class="sync-icon" style="background:rgba(232,163,61,0.15);">📶</div>
+                <div class="sync-label">Online Sync</div>
+                <div class="sync-sub">Catches up the moment signal returns</div>
+            </div>
+        </div>
+        <div class="brag-grid">
+            <div class="brag-item"><div class="num">100%</div><div class="label">Works fully offline — no signal, no problem</div></div>
+            <div class="brag-item"><div class="num">1x</div><div class="label">Payment. Ever. No subscription, no lock-out</div></div>
+            <div class="brag-item"><div class="num">∞</div><div class="label">Branches, staff accounts, and receipts</div></div>
+            <div class="brag-item"><div class="num">M-Pesa</div><div class="label">Built in — STK push straight from checkout</div></div>
+        </div>
+    </div>
+</section>
+
+<section class="showcase">
+    <div class="wrap">
+        <div class="showcase-inner reveal">
+            <div class="showcase-img">
+                <img id="sc-0-img" src="img/shot-checkout-mpesa.jpg" alt="A cashier checking out a customer on mydukapos, with an M-Pesa payment prompt on screen" loading="lazy" width="900" height="900">
+            </div>
+            <div class="showcase-text">
+                <p class="eyebrow" id="sc-0-eyebrow">At the till, in real life</p>
+                <h2 id="sc-0-title">This is what checkout actually looks like</h2>
+                <p id="sc-0-desc">Scan, ring it up, and the customer pays by M-Pesa without you touching another app. The receipt's printing before they've even put their phone away.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="wrap">
+        <div class="section-head reveal">
+            <p class="eyebrow">The ultimate POS, honestly</p>
+            <h2>Nothing else does this much for this little</h2>
+        </div>
+        <div class="feat-grid reveal-stagger">
+            <div class="feat">
+                <div class="feat-icon" style="background:#FDE7C4;">📦</div>
+                <div class="tag" id="fg-0-tag">Inventory</div>
+                <h3 id="fg-0-title">Stock that matches the shelf</h3>
+                <p id="fg-0-desc">Scan to sell, scan to restock — every branch, one accurate count, always up to date.</p>
+            </div>
+            <div class="feat">
+                <div class="feat-icon" style="background:#F6D6D3;">🧾</div>
+                <div class="tag" id="fg-1-tag">Receipts</div>
+                <h3 id="fg-1-title">A receipt for every sale</h3>
+                <p id="fg-1-desc">Printed on Bluetooth, USB, or any system printer — or shared straight to WhatsApp.</p>
+            </div>
+            <div class="feat">
+                <div class="feat-icon" style="background:#D9EBD6;">📊</div>
+                <div class="tag" id="fg-2-tag">Insights</div>
+                <h3 id="fg-2-title">Know your numbers, daily</h3>
+                <p id="fg-2-desc">Sales summaries and charts that show exactly where the money came from — and went.</p>
+            </div>
+            <div class="feat">
+                <div class="feat-icon" style="background:#FBE0A6;">⚠️</div>
+                <div class="tag" id="fg-3-tag">Alerts</div>
+                <h3 id="fg-3-title">Never sell out by surprise</h3>
+                <p id="fg-3-desc">Low-stock warnings before an item runs out, not after a customer walks away empty-handed.</p>
+            </div>
+            <div class="feat">
+                <div class="feat-icon" style="background:#D6E4F0;">🏭</div>
+                <div class="tag" id="fg-4-tag">Any business</div>
+                <h3 id="fg-4-title">Built for six industries</h3>
+                <p id="fg-4-desc">Shop, hotel, restaurant, bar, hospital, school, water refill station, or workshop — the same reliable core, tailored.</p>
+            </div>
+            <div class="feat">
+                <div class="feat-icon" style="background:#E3D6EE;">👥</div>
+                <div class="tag" id="fg-5-tag">Staff</div>
+                <h3 id="fg-5-title">Everyone gets their own login</h3>
+                <p id="fg-5-desc">Give each till worker their own account, and see exactly who served what, and when.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="wrap">
+        <div class="section-head reveal">
+            <p class="eyebrow">Why owners switch and stay</p>
+            <h2>Three reasons this earns its keep</h2>
+        </div>
+        <div class="feat-grid reveal-stagger">
+            <div class="feat" style="text-align:left;">
+                <div class="tag" id="ws-0-tag">Reliability</div>
+                <h3 style="font-size:18px;" id="ws-0-title">Never loses a sale</h3>
+                <p style="font-size:14.5px;" id="ws-0-desc">The till works with no internet at all — every sale is saved on the device the moment it happens, and syncs the second you're back online. Load shedding, weak signal, none of it stops business.</p>
+            </div>
+            <div class="feat" style="text-align:left;">
+                <div class="tag" id="ws-1-tag">Simplicity</div>
+                <h3 style="font-size:18px;" id="ws-1-title">Learn it in minutes</h3>
+                <p style="font-size:14.5px;" id="ws-1-desc">No manuals, no training courses. If your staff can use WhatsApp, they can run a till on mydukapos on day one — search, tap, paid.</p>
+            </div>
+            <div class="feat" style="text-align:left;">
+                <div class="tag" id="ws-2-tag">Fair pricing</div>
+                <h3 style="font-size:18px;" id="ws-2-title">You own it, outright</h3>
+                <p style="font-size:14.5px;" id="ws-2-desc">One payment of KES <span id="price-amount-feat">3,000</span>, and it's yours — permanently, for that business. No monthly bill eating your margins, no surprise renewal, ever.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="testi-section" id="testimonials">
+    <div class="wrap">
+        <div class="section-head reveal">
+            <p class="eyebrow">Real businesses, real relief</p>
+            <h2>What owners actually say</h2>
+        </div>
+        <div class="testi-grid reveal" id="testi-grid"></div>
+    </div>
+</section>
+
+<section id="pricing">
+    <div class="wrap">
+        <div class="section-head reveal">
+            <p class="eyebrow">Simple, honest pricing</p>
+            <h2>Pay once. Use it for as long as your business runs.</h2>
+        </div>
+        <div class="pricing-card reveal">
+            <div class="pricing-badge">One-time payment</div>
+            <div class="pricing-ribbon-clip"><div class="pricing-ribbon">Full Features</div></div>
+            <p class="eyebrow" style="margin-top:6px;">Any product, any business</p>
+            <div class="price-num"><span class="cur">KES</span> <span id="price-amount">3,000</span></div>
+            <div class="price-sub">PAID ONCE — YOURS FOR GOOD</div>
+            <ul class="price-list">
+                <li>Full access to your chosen product, permanently</li>
+                <li>Works completely offline, on any device</li>
+                <li>Unlimited receipts, staff accounts, and daily sales</li>
+                <li>M-Pesa STK push built in from day one</li>
+                <li>No monthly fee, no renewal, no surprise lock-out</li>
+            </ul>
+            <div>
+                <a href="#apps" class="btn btn-primary" style="width:100%; justify-content:center;">Start with a free demo first</a>
+            </div>
+            <p class="price-note">Try any product free for <span id="demo-duration-price-note">72 hours</span> before paying anything. No card required to start a demo.</p>
+        </div>
+    </div>
+</section>
+
+<section class="showcase reverse">
+    <div class="wrap">
+        <div class="showcase-inner reveal">
+            <div class="showcase-img">
+                <img id="sc-1-img" src="img/shot-liquor-etims.jpg" alt="A liquor store owner completing an eTIMS-compliant sale on mydukapos" loading="lazy" width="900" height="900">
+            </div>
+            <div class="showcase-text">
+                <p class="eyebrow" id="sc-1-eyebrow">Any business, not just shops</p>
+                <h2 id="sc-1-title">KRA-compliant, whatever you sell</h2>
+                <p id="sc-1-desc">Every sale can submit to eTIMS in real time, with the signature right there on the receipt — from a supermarket counter to a wines & spirits shelf.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="final-cta">
+    <div class="wrap reveal">
+        <h2>Your business deserves a till that doesn't let you down.</h2>
+        <p>Pick your product above, generate a free demo in under a minute, and see it running on your own phone today.</p>
+        <a href="#apps" class="btn btn-primary glow-cta">Try a free <span id="demo-duration-cta-2">72-hour</span> demo</a>
+    </div>
+</section>
+
+<footer>
+    <div class="wrap foot-inner">
+        <div>© <span id="foot-year"></span> mydukapos. Built in Kenya, for Kenyan business.</div>
+    </div>
+</footer>
+
+<script>
+    document.getElementById('foot-year').textContent = new Date().getFullYear();
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str == null ? '' : String(str);
+        return div.innerHTML;
+    }
+
+    const ALL_PRODUCTS = [
+        { key: 'shop', icon: '🏪', color: '#FDE7C4', accent: '#E8A33D', name: 'Shop POS', desc: 'Retail, hardware, supermarkets. Inventory, barcodes, wholesale pricing, multi-branch.' },
+        { key: 'hotel', icon: '🏨', color: '#F6D6D3', accent: '#C1502E', name: 'Hotel / Restaurant / Bar', desc: 'Tables, rooms, takeaway orders, kitchen tickets, dish recipes — one app for all three.' },
+        { key: 'hospital', icon: '🩺', color: '#D6E4F0', accent: '#4C7DA6', name: 'Hospital / HMIS', desc: 'Patient records, consultations, pharmacy dispensing, billing in one workflow.' },
+        { key: 'school', icon: '🎓', color: '#D9EBD6', accent: '#4C9A6A', name: 'School Fees', desc: 'Student registry, fee balances, guardian records, canteen sales.' },
+        { key: 'production', icon: '🏭', color: '#FBE0A6', accent: '#D69526', name: 'Production POS', desc: 'Build finished goods from raw components, hire equipment out, track every batch.' },
+        { key: 'pharmacy', icon: '💊', color: '#E3D6EE', accent: '#8E5FA8', name: 'Pharmacy POS', desc: 'Batch-level expiry tracking, FEFO stock rotation, prescription records.' },
+        { key: 'services', icon: '🔧', color: '#D7F0EA', accent: '#16A085', name: 'Services (Repairs, Salons & Bookings)', desc: 'Phone/electronics repair, salons & barbershops, garages, laundromats — client job tracking, staff bookings/appointments, and walk-in sales in one app.' },
+        { key: 'water', icon: '💧', color: '#CFE8F3', accent: '#2E86AB', name: 'Water Refill Station (AquaPOS)', desc: 'Dispenser and bale sales, tiered pricing, delivery zones, and refill tracking.' },
+    ];
+
+    function renderAppGrid(visibleKeys, overrides) {
+        const grid = document.getElementById('app-grid');
+        if (!grid) return;
+        const products = ALL_PRODUCTS.filter(p => visibleKeys.includes(p.key));
+        grid.innerHTML = products.map(p => {
+            const override = overrides && overrides[p.key];
+            const desc = (override && override.tagline) ? override.tagline : p.desc;
+            return `
+            <a href="app.html?product=${p.key}" class="app-card" style="--card-accent:${p.accent};">
+                <div class="icon" style="background:${p.color};">${p.icon}</div>
+                <div class="name">${escapeHtml(p.name)}</div>
+                <div class="desc">${escapeHtml(desc)}</div>
+                <div class="go">See details →</div>
+            </a>`;
+        }).join('');
+    }
+
+    const DEFAULT_HERO_HEADLINE = "The till that keeps working even when the internet doesn't.";
+    const DEFAULT_HERO_SUBHEAD = "One app for your shop, hotel, restaurant, bar, hospital, school, water refill station, or workshop. Every sale recorded, every receipt printed, every shilling accounted for — online or off.";
+
+    async function loadWebsiteMarketingContent(visibleKeys) {
+        try {
+            const res = await fetch('/api/website-marketing', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get' }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.content) return;
+
+            if (data.content.logoDataUrl) {
+                const wordmark = document.getElementById('site-wordmark');
+                // Adds the logo alongside the "mydukapos" text rather than
+                // replacing it — the wordmark is already a flex row with a
+                // gap, so an image just becomes the first item in it,
+                // matching how a logo + name normally sit together.
+                if (wordmark && !document.getElementById('site-wordmark-logo')) {
+                    const img = document.createElement('img');
+                    img.id = 'site-wordmark-logo';
+                    img.src = data.content.logoDataUrl;
+                    img.alt = 'Logo';
+                    img.style.cssText = 'height:44px; width:auto; display:block; order:-1;';
+                    wordmark.prepend(img);
+                }
+            }
+
+            // The default headline has a styled accent span on part of the
+            // text — only replaced with plain text if the owner has actually
+            // customized it, so the default keeps its intended highlight
+            // rather than losing it the moment this fetch succeeds.
+            if (data.content.heroHeadline && data.content.heroHeadline !== DEFAULT_HERO_HEADLINE) {
+                const headlineEl = document.getElementById('hero-headline');
+                if (headlineEl) headlineEl.textContent = data.content.heroHeadline;
+            }
+            if (data.content.heroSubhead && data.content.heroSubhead !== DEFAULT_HERO_SUBHEAD) {
+                const subheadEl = document.getElementById('hero-subhead');
+                if (subheadEl) subheadEl.textContent = data.content.heroSubhead;
+            }
+
+            // Same "only touch it if actually customized" pattern as the
+            // hero above — each of these has hardcoded HTML defaults
+            // (including the price card's embedded <span> that syncs with
+            // the live price), so nothing should be overwritten with
+            // identical text just because the fetch succeeded.
+            const DEFAULT_FEATURE_GRID = [
+                'Stock that matches the shelf', 'A receipt for every sale', 'Know your numbers, daily',
+                'Never sell out by surprise', 'Built for six industries', 'Everyone gets their own login',
+            ];
+            (data.content.featureGrid || []).forEach((card, i) => {
+                if (i > 5) return;
+                if (card.tag) document.getElementById(`fg-${i}-tag`).textContent = card.tag;
+                if (card.title && card.title !== DEFAULT_FEATURE_GRID[i]) document.getElementById(`fg-${i}-title`).textContent = card.title;
+                if (card.desc) document.getElementById(`fg-${i}-desc`).textContent = card.desc;
+            });
+
+            const DEFAULT_WHY_SWITCH_TITLES = ['Never loses a sale', 'Learn it in minutes', 'You own it, outright'];
+            // Card index 2's default text has a price-sync <span> embedded
+            // in the HTML that this default string (deliberately) doesn't
+            // include — comparing against it is how "the owner hasn't
+            // touched this" is distinguished from "the backend's own
+            // default happens to be non-empty" (which it always is), same
+            // reasoning as the hero headline/subhead above.
+            const DEFAULT_WHY_SWITCH_DESC_2 = 'One payment, and it\u2019s yours \u2014 permanently, for that business. No monthly bill eating your margins, no surprise renewal, ever.';
+            (data.content.whySwitchCards || []).forEach((card, i) => {
+                if (i > 2) return;
+                if (card.tag) document.getElementById(`ws-${i}-tag`).textContent = card.tag;
+                if (card.title && card.title !== DEFAULT_WHY_SWITCH_TITLES[i]) document.getElementById(`ws-${i}-title`).textContent = card.title;
+                if (i === 2) {
+                    if (card.desc && card.desc !== DEFAULT_WHY_SWITCH_DESC_2) document.getElementById(`ws-${i}-desc`).textContent = card.desc;
+                } else if (card.desc) {
+                    document.getElementById(`ws-${i}-desc`).textContent = card.desc;
+                }
+            });
+
+            const DEFAULT_SHOWCASE_TITLES = ['This is what checkout actually looks like', 'KRA-compliant, whatever you sell'];
+            (data.content.showcases || []).forEach((sc, i) => {
+                if (i > 1) return;
+                if (sc.eyebrow) document.getElementById(`sc-${i}-eyebrow`).textContent = sc.eyebrow;
+                if (sc.title && sc.title !== DEFAULT_SHOWCASE_TITLES[i]) document.getElementById(`sc-${i}-title`).textContent = sc.title;
+                if (sc.desc) document.getElementById(`sc-${i}-desc`).textContent = sc.desc;
+                if (sc.imageDataUrl) document.getElementById(`sc-${i}-img`).src = sc.imageDataUrl;
+            });
+
+            if (data.content.products) {
+                renderAppGrid(visibleKeys || ALL_PRODUCTS.map(p => p.key), data.content.products);
+            }
+        } catch (e) {
+            // Silent — same reasoning as loadWebsiteContent below: the page
+            // already shows sensible defaults, so a failed fetch just means
+            // those stay visible.
+        }
+    }
+
+    async function loadWebsiteContent() {
+        // The grid needs to show something even if the fetch below fails —
+        // all 6 by default, then narrowed once (if) real content arrives.
+        renderAppGrid(ALL_PRODUCTS.map(p => p.key));
+        let visibleProducts = ALL_PRODUCTS.map(p => p.key);
+        try {
+            const res = await fetch('/api/website-content', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get' }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.content) { loadWebsiteMarketingContent(visibleProducts); return; }
+
+            visibleProducts = data.content.visibleProducts || visibleProducts;
+            renderAppGrid(visibleProducts);
+
+            const priceFormatted = Number(data.content.price).toLocaleString('en-KE');
+            ['price-amount', 'price-amount-hero', 'price-amount-feat'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = priceFormatted;
+            });
+
+            // Demo duration — one owner-set value (Owner Console → 🌐 Public
+            // Website), rendered in whatever phrasing each spot on the page
+            // needs ("72-hour" as an adjective, "72hr" as a compact badge,
+            // "72 hours" as a plain noun phrase).
+            const demoHours = Number(data.content.demoDurationHours) || 72;
+            const demoDays = demoHours / 24;
+            const demoDaysRounded = Math.round(demoDays * 10) / 10;
+            const isWholeDays = demoHours >= 24 && demoHours % 24 === 0;
+            const adjectivePhrase = isWholeDays ? `${demoDaysRounded}-day` : `${demoHours}-hour`;
+            const badgePhrase = isWholeDays ? `${demoDaysRounded}d` : `${demoHours}hr`;
+            const nounPhrase = isWholeDays ? `${demoDaysRounded} day${demoDaysRounded === 1 ? '' : 's'}` : `${demoHours} hour${demoHours === 1 ? '' : 's'}`;
+            ['demo-duration-hero-cta', 'demo-duration-cta-2'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = adjectivePhrase;
+            });
+            const proofEl = document.getElementById('demo-duration-proof');
+            if (proofEl) proofEl.textContent = badgePhrase;
+            const noteEl = document.getElementById('demo-duration-price-note');
+            if (noteEl) noteEl.textContent = nounPhrase;
+
+            const testimonials = data.content.testimonials || [];
+            const grid = document.getElementById('testi-grid');
+            const avatarColors = ['#FDE7C4', '#F6D6D3', '#D9EBD6', '#FBE0A6', '#D6E4F0', '#E3D6EE'];
+            if (grid && testimonials.length > 0) {
+                grid.innerHTML = testimonials.map((t, idx) => `
+                    <div class="testi-card">
+                        <div class="testi-quote-mark">\u201D</div>
+                        <div class="testi-stars">★★★★★</div>
+                        <p class="testi-quote">${escapeHtml(t.quote)}</p>
+                        <div class="testi-who">
+                            <div class="testi-avatar" style="background:${avatarColors[idx % avatarColors.length]};">${escapeHtml((t.name || '?').trim().charAt(0).toUpperCase())}</div>
+                            <div class="testi-who-text"><strong>${escapeHtml(t.name)}</strong>${escapeHtml(t.role || '')}</div>
+                        </div>
+                    </div>`).join('');
+            }
+            loadWebsiteMarketingContent(visibleProducts);
+        } catch (e) {
+            // Silent — the page already shows sensible defaults in the HTML
+            // itself, so a failed fetch here just means those stay visible
+            // rather than the page breaking or showing an error to a visitor.
+            loadWebsiteMarketingContent(visibleProducts);
+        }
+    }
+
+    loadWebsiteContent();
+
+    // Scroll-reveal: watches every .reveal/.reveal-stagger element and adds
+    // .in-view the first time it crosses into the viewport, then stops
+    // watching it — a one-time entrance, not something that re-triggers on
+    // every scroll up and down past the same section.
+    //
+    // Safety net: these elements start at opacity:0 in CSS, so if anything
+    // here fails — no IntersectionObserver support, or an unrelated script
+    // error elsewhere on the page stopping this from ever running — the
+    // content would stay invisible forever, which on a marketing page could
+    // directly cost a sale. revealAllNow() is the fallback for exactly that:
+    // it runs immediately if the browser can't do scroll-triggered reveals
+    // at all, and again on a hard timeout no matter what, so a visitor never
+    // sees a permanently blank section.
+    function revealAllNow() {
+        document.querySelectorAll('.reveal, .reveal-stagger').forEach((el) => el.classList.add('in-view'));
+    }
+
+    if (!('IntersectionObserver' in window)) {
+        revealAllNow();
+    } else {
+        try {
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('in-view');
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+            document.querySelectorAll('.reveal, .reveal-stagger').forEach((el) => revealObserver.observe(el));
+        } catch (e) {
+            revealAllNow();
+        }
+    }
+    // Belt-and-braces: whatever hasn't revealed itself within 4s (an
+    // element that never scrolled into view, or any edge case the above
+    // didn't catch) reveals anyway, rather than staying hidden indefinitely.
+    setTimeout(revealAllNow, 4000);
+</script>
+
+<a href="https://wa.me/254791598506?text=Hi%2C%20I'd%20like%20to%20know%20more%20about%20mydukapos"
+   class="whatsapp-float" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp">
+    <svg viewBox="0 0 32 32" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16.001 3C9.373 3 4 8.373 4 15c0 2.386.697 4.61 1.902 6.48L4 29l7.72-1.86A11.93 11.93 0 0 0 16 27c6.627 0 12-5.373 12-12S22.628 3 16.001 3zm0 21.75c-1.98 0-3.822-.55-5.396-1.5l-.387-.23-4.584 1.104 1.13-4.47-.253-.398A9.71 9.71 0 0 1 5.25 15c0-5.936 4.815-10.75 10.75-10.75S26.75 9.064 26.75 15 21.936 24.75 16 24.75zm5.94-8.06c-.325-.163-1.925-.95-2.223-1.058-.298-.108-.515-.163-.732.163-.217.325-.84 1.058-1.03 1.276-.19.217-.38.244-.706.081-.325-.163-1.373-.506-2.615-1.612-.967-.862-1.62-1.927-1.81-2.252-.19-.325-.02-.5.143-.663.147-.146.325-.38.488-.57.163-.19.217-.325.325-.542.108-.217.054-.407-.027-.57-.081-.163-.732-1.764-1.003-2.417-.264-.635-.532-.55-.732-.56l-.624-.011c-.217 0-.57.081-.868.407-.298.325-1.138 1.112-1.138 2.713 0 1.6 1.165 3.147 1.327 3.364.163.217 2.293 3.5 5.556 4.91.776.335 1.382.535 1.854.685.779.248 1.487.213 2.047.129.624-.093 1.925-.787 2.196-1.548.271-.76.271-1.412.19-1.548-.081-.136-.298-.217-.624-.38z"/>
+    </svg>
+</a>
+</body>
+</html>
