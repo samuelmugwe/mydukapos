@@ -3105,7 +3105,7 @@
             <div class="pos-grid">
                 <div class="panel">
                     <h3>🏭 Produce Item</h3>
-                    <p style="font-size:13px; color:#7f8c8d; margin-top:-6px;">Pick an item and how many you produced — its saved Production Recipe (materials + optional cost, set once in Inventory → 🏭 Recipe) is deducted automatically and finished stock updates instantly. No recipe set yet? It'll just add the quantity with nothing deducted. For a repeatable, named multi-step process instead, use the <a href="javascript:void(0)" onclick="openProductionWizardModal()">🧙 Production Wizard</a> — its output lands in Factory Stock below rather than straight into Shop Floor stock.</p>
+                    <p style="font-size:13px; color:#7f8c8d; margin-top:-6px;">Pick an item and how many you produced — its saved Production Recipe (materials + optional cost, set once in Inventory → 🏭 Recipe) is deducted automatically and finished stock updates instantly. No recipe set yet? It'll just add the quantity with nothing deducted. For a repeatable, named multi-step process instead, use the <a href="javascript:void(0)" onclick="openProductionWizardModal()">🧙 Production Wizard</a> below — same result either way, straight into Production's stock, ready to dispatch to Shop.</p>
                     <button type="button" class="btn-main" style="background:#8E44AD; margin-bottom:14px;" onclick="openProductionWizardModal()">🧙 Open Multi-Step Production Wizard</button>
 
                     <div class="form-group">
@@ -3131,7 +3131,7 @@
 
                 <div class="panel factory-stock-card">
                     <h3>🏭 Factory Floor Stock</h3>
-                    <p style="font-size:13px; color:#7f8c8d; margin-top:-6px;">What's sitting at the factory, not yet moved to the Shop Floor. Sell straight from here, or dispatch some/all of it to Shop Floor stock.</p>
+                    <p style="font-size:13px; color:#7f8c8d; margin-top:-6px;">Production's current stock, at a glance — the exact same numbers as Inventory. Sell straight from here, or dispatch some/all of it to a Shop branch.</p>
                     <div class="table-scroll">
                         <table>
                             <thead><tr><th>Item</th><th>Factory Stock</th><th></th></tr></thead>
@@ -3164,12 +3164,13 @@
         </div>
 
         <!-- PRODUCTION WIZARD MODAL: customizable multi-step BOM pipeline.
-             Output always lands in Factory Stock, never Shop Floor stock
-             directly — see Factory Dispatch to move it across. -->
+             Output lands directly in Production's regular stock (Factory
+             Floor Stock below is just a view of that same number) — use
+             Dispatch to move it to Shop from there. -->
         <div id="production-wizard-modal">
             <div class="popup-modal-box" style="max-width:720px;">
                 <h2>🧙 Multi-Step Production Wizard</h2>
-                <p style="font-size:13px; color:#7f8c8d;">Name each step and assign the raw materials it consumes — deducted per bottle produced, across every step combined. Output goes into <strong>Factory Holding Stock</strong>.</p>
+                <p style="font-size:13px; color:#7f8c8d;">Name each step and assign the raw materials it consumes — deducted per bottle produced, across every step combined. Output goes straight into <strong>Production's stock</strong>.</p>
 
                 <div class="form-group">
                     <label>Producing (Bale or Sealed Bottle item)</label>
@@ -3201,7 +3202,7 @@
                 <p id="wizard-error" style="color:var(--danger); font-size:13px; min-height:16px;"></p>
                 <div style="display:flex; gap:10px;">
                     <button class="btn-main" style="background:#95a5a6;" onclick="closeProductionWizardModal()">Cancel</button>
-                    <button class="btn-main" style="background:var(--success);" onclick="submitProductionWizard()">🏭 Run Production → Factory Stock</button>
+                    <button class="btn-main" style="background:var(--success);" onclick="submitProductionWizard()">🏭 Run Production → Production Stock</button>
                 </div>
             </div>
         </div>
@@ -8273,51 +8274,16 @@
         // item, and is flagged fromFactory so checkout deducts the right
         // pool and the receipt can note where it came from.
         function addFactorySaleToCart(code, addQty) {
-            const product = products.find(p => p.code === code);
-            if (!product) return;
+            // Factory Stock IS Production's regular stock now (see
+            // renderFactoryStockTable) — sell it through the exact same
+            // add-to-cart path every other item uses, then jump straight
+            // to checkout as a convenience, same as before.
             const qtyToAdd = (typeof addQty === 'number' && addQty > 0) ? addQty : 1;
-            if (qtyToAdd < 1 && product.category === 'bale' && product.allowHalfBale === false) {
-                showToast(`Half-bale sales are turned off for "${product.name}".`, true);
-                return;
-            }
-            const key = `product:${code}::factory`;
-            const alreadyQty = currentCart[key] ? currentCart[key].qty : 0;
-            const available = availableStockForLine(product, true);
-            if (!product.customQuote && alreadyQty + qtyToAdd > available) {
-                showToast(`Only ${available} of "${product.name}" in Factory Stock.`, true);
-                return;
-            }
-            if (currentCart[key]) {
-                currentCart[key].qty += qtyToAdd;
-                if (Array.isArray(product.priceTiers) && product.priceTiers.length > 0) {
-                    currentCart[key].price = getTieredPrice(product, currentCart[key].qty);
-                }
-            } else {
-                const unitPrice = product.customQuote ? 0
-                    : qtyToAdd < 1 ? getHalfBalePrice(product) * 2
-                    : getTieredPrice(product, 1);
-                currentCart[key] = {
-                    type: product.category === 'accessory' ? 'accessory' : product.category === 'bale' ? 'bale' : 'bottled', key, code,
-                    name: `${product.name}${qtyToAdd < 1 ? ' (Half Bale)' : ''} — Factory Direct`, sizeML: product.sizeML || null,
-                    price: unitPrice, qty: qtyToAdd,
-                    vatCategory: product.vatCategory || 'A', fromFactory: true,
-                };
-            }
-            renderCart();
-            // Production-site sale: jump straight to the Sales Counter's
-            // checkout so this reads as one continuous action rather than
-            // "add to cart, then go find the right tab" — it's the exact
-            // same cart/payment pipeline (Cash, M-Pesa, Card, Split,
-            // Bill/Credit) a Shop-Floor sale uses, just reached from here.
-            // Clicking the real tab button (rather than calling the
-            // switch function directly) keeps this working correctly even
-            // when Sales Counter is lock-guarded for the current staff
-            // member — the usual PIN prompt still applies.
+            addBottledToCart(code, undefined, qtyToAdd);
             const salesTabBtn = document.getElementById('sales-tab-btn');
             if (salesTabBtn) salesTabBtn.click();
             const paymentToggle = document.getElementById('payment-toggle');
             if (paymentToggle) paymentToggle.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            showToast(`Added "${product.name}" from Factory Stock — choose a payment method to complete the sale.`);
         }
 
         let pendingCustomQuoteCode = null;
@@ -11451,16 +11417,18 @@
            first, separate from Shop Floor stock (products[].qty /
            .bottleStock). Dispatch moves some/all of it across; Direct
            Sale sells straight out of it without dispatching first. */
+        function productionSiteId() { return (sites.find(s => s.type === 'production') || sites[0]).id; }
+
+        // Factory Floor Stock is Production's regular inventory — this
+        // used to be a separate holding pool that only the Wizard filled;
+        // it's now just a convenient view of the same stock number shown
+        // in Inventory, with quick Sell/Dispatch actions right here.
         function factoryStockEligibleProducts() {
             return products.filter(p => (p.category === 'bale' || p.category === 'bottled') && !p.customQuote);
         }
 
         function factoryStockDisplay(p) {
-            if (p.trackBottles) {
-                const b = getBaleBreakdown(p.factoryBottleStock || 0, productBottlesPerBale(p));
-                return `${b.fullBales} full, ${b.halfBales} half${b.looseBottles > 0 ? `, ${b.looseBottles} loose` : ''}`;
-            }
-            return `${p.factoryQty || 0} ${p.category === 'bale' ? 'bale(s)' : 'unit(s)'}`;
+            return `${stockAt(p, productionSiteId())} ${p.category === 'bale' ? 'bale(s)' : 'unit(s)'}`;
         }
 
         function renderFactoryStockTable() {
@@ -11472,14 +11440,14 @@
                 return;
             }
             tbody.innerHTML = list.map(p => {
-                const available = availableStockForLine(p, true);
+                const available = stockAt(p, productionSiteId());
                 return `
                 <tr>
                     <td>${escapeHtml(p.name)}</td>
                     <td><span class="factory-stock-badge">${factoryStockDisplay(p)}</span></td>
                     <td style="white-space:nowrap;">
                         <button class="settings-small-btn" ${available <= 0 ? 'disabled' : ''} onclick="addFactorySaleToCart('${escapeQuotes(p.code)}')" title="Adds to cart and opens the Sales Counter's payment screen — Cash, M-Pesa, Card, Split, or Bill/Credit">🛒 Sell & Checkout</button>
-                        <button class="settings-small-btn" ${available <= 0 ? 'disabled' : ''} onclick="openFactoryDispatchModal('${escapeQuotes(p.code)}')">🚚 Dispatch</button>
+                        <button class="settings-small-btn" ${available <= 0 ? 'disabled' : ''} onclick="openDispatchModal('${escapeQuotes(p.code)}')">🚚 Dispatch</button>
                     </td>
                 </tr>`;
             }).join('');
@@ -11672,13 +11640,16 @@
             }
 
             if (target.trackBottles) {
-                target.factoryBottleStock = (target.factoryBottleStock || 0) + bottles;
+                // Regular stock now, not the old separate Factory pool —
+                // bottleStock is trackBottles's real source of truth;
+                // syncBaleTrackingFields derives the qty mirror from it.
+                target.bottleStock = (target.bottleStock || 0) + bottles;
                 syncBaleTrackingFields(target);
             } else if (target.category === 'bale') {
                 const bpb = productBottlesPerBale(target);
-                target.factoryQty = round2((target.factoryQty || 0) + baleBreakdownToDecimal(getBaleBreakdown(bottles, bpb)));
+                target.qty = round2((target.qty || 0) + baleBreakdownToDecimal(getBaleBreakdown(bottles, bpb)));
             } else {
-                target.factoryQty = round2((target.factoryQty || 0) + bottles);
+                target.qty = round2((target.qty || 0) + bottles);
             }
 
             const notes = document.getElementById('wizard-notes-input').value.trim();
