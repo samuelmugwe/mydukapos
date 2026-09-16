@@ -4288,7 +4288,7 @@
             <!-- INSTALL / ADD TO HOME SCREEN -->
             <div class="settings-section-content" id="settings-section-install">
                 <h4>🏷️ Version</h4>
-                <p style="font-size:13px; color:#555; margin:0 0 8px;">Use this to confirm a redeploy actually reached this device. If you've just deployed an update and this still shows the old build, tap "Re-download for Offline Use" further down, then reload.</p>
+                <p style="font-size:13px; color:#555; margin:0 0 8px;">Shows the build number this device actually has cached — use it to confirm a redeploy reached this device. If you've just deployed and this still shows an old version number, tap "Re-download for Offline Use" further down, then fully close and reopen the app.</p>
                 <p class="settings-msg" id="app-build-stamp" style="font-family:monospace;"></p>
 
                 <hr class="settings-divider">
@@ -22913,8 +22913,23 @@
         function updateInstallUI() {
             const stampEl = document.getElementById('app-build-stamp');
             if (stampEl) {
-                stampEl.className = 'settings-msg success';
-                stampEl.textContent = `Build: ${APP_BUILD}`;
+                // Reads the SERVICE WORKER'S OWN active cache name directly
+                // (the same thing you'd check manually via caches.keys() in
+                // DevTools) rather than a hardcoded string here that could
+                // drift out of sync — this can never show a stale answer.
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        const shellCache = names.find(n => n.includes('-shell-v'));
+                        stampEl.className = 'settings-msg success';
+                        stampEl.textContent = shellCache ? `Cached build: ${shellCache}` : 'No cached build found yet — open the app online once first.';
+                    }).catch(() => {
+                        stampEl.className = 'settings-msg';
+                        stampEl.textContent = 'Could not read cache version.';
+                    });
+                } else {
+                    stampEl.className = 'settings-msg';
+                    stampEl.textContent = 'This browser doesn\u2019t support checking the cached version.';
+                }
             }
             const statusEl = document.getElementById('install-status');
             const btn = document.getElementById('install-app-btn');
